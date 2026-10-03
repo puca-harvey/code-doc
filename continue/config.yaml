@@ -1,0 +1,85 @@
+# For IntelliSense, copy Continue's JSON schema next to this file as
+# %USERPROFILE%\.continue\config-yaml-schema.json - the offline copy shipped with
+# Continue 2.0.0 - then point the editor at it with a path relative to this file:
+#   # yaml-language-server: $schema=./config-yaml-schema.json
+# Refresh it after a Continue upgrade with:
+#   Copy-Item "$env:USERPROFILE\.vscode\extensions\continue.continue-*\config-yaml-schema.json" "$env:USERPROFILE\.continue\"
+
+name: Main Config
+version: 1.0.0
+schema: v1
+
+models:
+  # ---------------------------------------------------------
+  # MAIN MODEL: Qwen2.5‑Coder 14B
+  # Used for chat, agent, planning, code editing, autocomplete.
+  # Ollama ships this model with a native fill-in-the-middle template
+  # ("{{- if .Suffix }}<|fim_prefix|>...") and reports the "insert"
+  # capability, so Continue uses the real FIM code path for tab
+  # completion instead of the raw-prompt fallback.
+  # contextLength 8192 keeps the ~10 GB model fully resident on the
+  # 12 GB RTX 5070; the machine-wide OLLAMA_CONTEXT_LENGTH=65536 would
+  # otherwise be requested and push the model into CPU offload.
+  # This makes it the primary model in Continue.
+  # ---------------------------------------------------------
+  - name: Qwen2.5-Coder 14B
+    provider: ollama
+    model: qwen2.5-coder:14b
+    contextLength: 8192
+    roles:
+      - apply # apply code changes
+      - autocomplete # code completion
+      - chat # main chat model
+      - edit # inline code edits
+
+  # ---------------------------------------------------------
+  # FAST CHAT MODEL: Granite 4.2 8B (IBM Granite 4.2, 8.8B params,
+  # 128k context, tool use and thinking). Measured ~105 tok/s against
+  # ~65 tok/s for the 14B, so it is the quicker choice for plain chat.
+  # It deliberately does NOT hold the autocomplete/edit/apply roles:
+  # its Ollama Modelfile template is a bare "{{ .Prompt }}" with no
+  # .Suffix, so Continue cannot use native FIM and has to fall back to
+  # sending a raw "<|fim_prefix|>...<|fim_middle|>" prompt, which the
+  # model then continues past the insertion point into prose.
+  # Keep tab completion on Qwen2.5-Coder.
+  # ---------------------------------------------------------
+  - name: Granite 4.2 8b
+    provider: ollama
+    model: granite4.2:8b
+    contextLength: 8192
+    roles:
+      - chat
+
+  # ---------------------------------------------------------
+  # FAST FALLBACK CHAT MODEL
+  # Llama 3.1 8B is extremely fast and lightweight.
+  # Used only as a fallback chat model.
+  # ---------------------------------------------------------
+  - name: Llama 3.1 8B
+    provider: ollama
+    model: llama3.1:8b
+    roles:
+      - chat
+
+  # ---------------------------------------------------------
+  # EMBEDDING MODEL
+  # Required for semantic search, context, navigation.
+  # nomic-embed-text-v2-moe:latest replaced nomic-embed-text:latest:
+  # 475M params (MoE, 305M active), 768 dims reducible to 256 via
+  # Matryoshka, 512-token window, ~100 languages.
+  # Continue embeds with POST /api/embed {model, input: [chunks]} and
+  # this model answers it (verified: 2 x 768 unit-norm vectors).
+  # Caveats: the model card recommends "search_document: " /
+  # "search_query: " prefixes for best retrieval, which Continue does
+  # not add, and the 512-token window is much shorter than
+  # nomic-embed-text's 8192, so leave Continue's default chunk size
+  # alone (Ollama truncates anything longer).
+  # Changing embedder invalidates the stored index - rebuild it, and
+  # pick this model for the Embed role in the model picker, because the
+  # remembered selection is currently "Transformers.js (Built-In)".
+  # ---------------------------------------------------------
+  - name: Nomic Embed v2 MoE
+    provider: ollama
+    model: nomic-embed-text-v2-moe:latest
+    roles:
+      - embed

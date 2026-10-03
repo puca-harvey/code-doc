@@ -1,0 +1,31 @@
+# Editor and IDE state. .vscode is ignored because settings.json holds a
+# machine-specific git.path.
+.vscode/
+.idea/
+*.iml
+.vs/
+
+# Windows metadata
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.lnk
+
+# macOS metadata
+.DS_Store
+
+# Agent tool state. Continue/Cline rules and per-machine agent directories are
+# local state, not repository content.
+.claude/
+.cursor/
+.clinerules/
+.cline/
+
+# Temporary and backup files
+*~
+*.bak
+*.tmp
+
+# PlatformIO build output and tool caches - never commit (see MICROCONTROLLER.md)
+.pio/
+.cache/
