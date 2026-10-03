@@ -40,8 +40,8 @@ length are not. Follow the profile for your card and skip the model-specific par
 
 ```powershell
 # install Ollama from https://ollama.com/download, then follow the profile for your card:
-#   12GB.md  -> ollama pull qwen2.5-coder:14b ; ollama pull granite4.2:8b ; ...
-#   8GB.md   -> ollama pull qwen2.5-coder:7b  ; ollama pull granite4.2:8b ; ...
+#   12GB.md  -> ollama pull qwen2.5-coder:14b ; ollama pull ornith-1.5:9b ; ...
+#   8GB.md   -> ollama pull qwen2.5-coder:7b  ; ollama pull ornith-1.5:9b ; ...
 ollama list                                # verify
 ```
 
@@ -82,9 +82,9 @@ Qwen2.5-Coder models with one:
 ```
 
 That `{{- if .Suffix }}` branch is the whole point. Continue sends *prefix + suffix* and gets back only the middle,
-so the model completes the line you are on. A model without FIM — Granite, Llama — has a bare `{{ .Prompt }}`
-template with no `.Suffix`, so Continue falls back to pasting a raw `<|fim_prefix|>…<|fim_middle|>` prompt and the
-model continues *past* the insertion point into unrelated prose. Fine for chat, useless for tab completion.
+so the model completes the line you are on. A model without FIM — the chat model, `ornith-1.5:9b` — has a bare
+`{{ .Prompt }}` template with no `.Suffix`, so Continue falls back to pasting a raw `<|fim_prefix|>…<|fim_middle|>` prompt
+and the model continues *past* the insertion point into unrelated prose. Fine for chat, useless for tab completion.
 
 Both `qwen2.5-coder:14b` and `qwen2.5-coder:7b` carry this template. Which one to use depends on your VRAM; see
 [`12GB.md`](12GB.md) or [`8GB.md`](8GB.md).
@@ -157,7 +157,7 @@ Installed here as `saoudrizwan.claude-dev` (Cline `4.1.22`).
 2. Open Cline — click the Cline icon in the activity bar, or `Ctrl`+`Shift`+`P` → *Cline: Open in New Tab*.
 3. Click the **settings gear** (bottom of the Cline sidebar) → **API Provider** → **Ollama**.
 4. **Base URL** defaults to `http://localhost:11434` — leave it unless you changed Ollama's port.
-5. **Model Id** → type the exact tag from `ollama list`, e.g. `granite4.2:8b` (fast chat) or the code model from
+5. **Model Id** → type the exact tag from `ollama list`, e.g. `ornith-1.5:9b` (fast chat) or the code model from
    your [hardware profile](12GB.md). Cline can also fetch the list from `http://localhost:11434/api/tags`.
 6. Enable **Use Compact Prompt** (Settings → Features) — smaller context, much faster replies on a local model.
 7. Click **Done**.
@@ -178,9 +178,10 @@ curl.exe http://localhost:11434/api/tags
 - Cline asks before running terminal commands; auto‑approve per‑command or per‑tool as you get comfortable.
 - `Ctrl`+`'` adds the current selection to the chat, or jumps to the chat input when nothing is selected.
 
-Point Cline at the same code model Continue uses for autocomplete, so the code it writes matches the code it will
-be completing. Granite 4.2 8B is faster for planning and explanation; the code model is better for the actual edits.
-The tag depends on your VRAM — see [`12GB.md`](12GB.md) or [`8GB.md`](8GB.md).
+Point Cline at `ornith-1.5:9b` for everything conversational, including edits. It holds the `chat`, `edit` and
+`apply` roles in `config.yaml`, because it is ~1.6× faster than the code model. `qwen2.5-coder:14b` keeps only
+`autocomplete`, where its native FIM template is the only thing that matters. If inline edits feel weaker than when the
+14 B held them, move `edit` and `apply` back in `config.yaml` — it is a two-line change.
 
 ### Where Cline stores things
 
@@ -273,15 +274,15 @@ Three limits apply: a **5-hour rolling window**, **weekly**, and **monthly**. Ch
 
 | Situation | Model |
 | --- | --- |
-| Inline autocomplete, quick edits | The FIM code model from your [hardware profile](12GB.md), via `Tab` |
-| Chat, planning, explanations | `granite4.2:8b` (local) |
+| Inline autocomplete (`Tab`) | The FIM code model from your [hardware profile](12GB.md) — the only role it holds |
+| Chat, planning, edits, explanations | `ornith-1.5:9b` (local) |
 | Multi-file refactor, long context | `cline-pass/glm-5.3`, or `cline-pass/qwen3.7-plus` past 256 K |
 | Hardest reasoning, budget allows | `cline-pass/kimi-k3` |
 | ClinePass quota spent | `cline-free/deepseek-v4.1-flash` |
 | Private code that must not leave the machine | Local Ollama only |
 
 Switching model mid-task is free on the local side, so there is no reason to burn ClinePass quota on
-something a local 8 B model handles.
+something a local 9 B model handles.
 
 ClinePass models are also usable outside Cline via the [Cline API](https://docs.cline.bot/api/overview)
 (OpenAI-compatible Chat Completions, same `cline-pass/...` slug in the `model` field).
@@ -322,7 +323,7 @@ Hardware-specific symptoms (CPU offload, out-of-memory) are in the profile for y
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | No completions on `Tab` | Continue not installed/enabled, or Ollama unreachable | `ollama list` must show the model; reload the window; check the Continue output view |
-| Completion continues into prose | A non-FIM model holds the `autocomplete` role | Only a Qwen2.5-Coder tag supports FIM; keep `autocomplete` off Granite/Llama |
+| Completion continues into prose | A non-FIM model holds the `autocomplete` role | Only a Qwen2.5-Coder tag supports FIM; keep `autocomplete` off the chat model |
 | Cline cannot reach Ollama | Wrong Base URL | Use `http://localhost:11434`, then `ollama serve` |
 | Chat replies are generic | Fast chat model selected for a code question | Switch Cline to the code model from your hardware profile |
 | Semantic search returns nothing | Embed role points at the built-in embedder | Select *Nomic Embed v2 MoE*, then rebuild the index |
@@ -345,8 +346,9 @@ Yes, but tab completion will be slow — expect seconds instead of milliseconds.
 the note in [`12GB.md`](12GB.md).
 
 **Why not use one model for everything?**
-Granite 4.2 8B is ~1.6× faster for prose, and the FIM code model is much better at code, especially with FIM.
-Splitting the roles gets both.
+The code model is the only one with a native FIM template, so `autocomplete` has no alternative. Everything else —
+chat, planning, `edit`, `apply` — goes to `ornith-1.5:9b`, which is ~1.6× faster. That is a speed-over-code-quality
+trade; give the roles back to the code model if its edits read better to you.
 
 **How do I add a model?**
 Add an entry under `models:` in `config.yaml`, run `ollama pull <tag>`, then select it in the model picker.
