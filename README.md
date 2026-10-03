@@ -2,8 +2,9 @@
 
 VS Code with AI support but **without GitHub Copilot**:
 
-- **Autocomplete / inline editing** — [Continue](https://continue.dev) extension driven by a **local Ollama** server running **Qwen2.5‑Coder 14B** (Fill‑in‑the‑Middle, tab completion).
-- **Chat / prompt workflows** — Continue's chat panel (and *Cline* when you want the agent to plan and edit files for you) pointed at the same local models.
+- **Autocomplete** — [Continue](https://continue.dev) driven by a **local Ollama** server running a
+  Fill-in-the-Middle code model (tab completion).
+- **Chat and file editing** — [Cline](https://cline.bot), pointed at the same local models.
 - No GitHub account, no Copilot license, no code ever leaves the machine.
 
 Everything runs locally, so there is no per-request cost and no data sent to a cloud provider.
@@ -13,37 +14,43 @@ Everything runs locally, so there is no per-request cost and no data sent to a c
 | File | What it is |
 | --- | --- |
 | [`continue/config.yaml`](continue/config.yaml) | The Continue `config.yaml` (models, roles, context lengths). Copy to `%USERPROFILE%\.continue\config.yaml`. |
+| [`12GB.md`](12GB.md) | Hardware profile for a 12 GB card (RTX 5070) — model set, context length, measured speeds. |
+| [`8GB.md`](8GB.md) | Hardware profile for an 8 GB card (RTX 4060) — smaller model set and a reduced context length. |
 | [`MICROCONTROLLER.md`](MICROCONTROLLER.md) | PlatformIO / embedded workflow: `platformio.ini`, build & flash, debugging, rules files, model split for firmware. |
 | [`LICENSE`](LICENSE) | Repository license. |
+
+**VRAM decides which profile applies.** The general setup below is hardware-independent; the model list and context
+length are not. Follow the profile for your card and skip the model-specific parts here.
+
+| Card | Profile |
+| --- | --- |
+| 12 GB (RTX 5070) | [`12GB.md`](12GB.md) |
+| 8 GB (RTX 4060) | [`8GB.md`](8GB.md) |
 
 ## Requirements
 
 - Windows 10/11 (instructions below; macOS/Linux work the same for Ollama + Continue).
 - VS Code.
 - [Ollama](https://ollama.com/download) installed (verified here with `ollama 0.35.1`).
-- A GPU with enough VRAM to keep the 14B model resident (this setup targets ~12 GB, e.g. an RTX 5070).
-- ~20 GB disk for all four models.
+- Enough VRAM to keep the autocomplete model resident — see the profiles above.
 
 ## Install
 
 ### 1. Ollama + models
 
 ```powershell
-# install Ollama from https://ollama.com/download, then:
-ollama pull qwen2.5-coder:14b              # ~9 GB - main model: autocomplete, edit, apply, chat
-ollama pull granite4.2:8b                  # ~5 GB - fast chat
-ollama pull llama3.1:8b                    # ~5 GB - fast fallback chat
-ollama pull nomic-embed-text-v2-moe:latest # ~1 GB - embeddings / semantic search
+# install Ollama from https://ollama.com/download, then follow the profile for your card:
+#   12GB.md  -> ollama pull qwen2.5-coder:14b ; ollama pull granite4.2:8b ; ...
+#   8GB.md   -> ollama pull qwen2.5-coder:7b  ; ollama pull granite4.2:8b ; ...
 ollama list                                # verify
 ```
 
-`qwen2.5-coder:14b` must come from the **official Ollama library**. The plain `:7b` tag is a non‑FIM derivative and gives noticeably worse completions; the `:14b` and `:32b` tags ship the native fill‑in‑the‑middle template.
+Model choice, sizes and context length are hardware-specific and live in the profiles.
 
 ### 2. Continue extension in VS Code
 
 1. Open the Extensions view — click the **Extensions** icon in the activity bar, or `Ctrl`+`Shift`+`P` →
-   *Extensions: View Extensions*. (`Ctrl`+`Shift`+`X` is the VS Code default but does **not** fire on this
-   machine; see *Keybindings* below.)
+   *Extensions: View Extensions*.
 2. Search **Continue** and install it (this setup is written against Continue `2.0.0`).
 3. Copy the config into place:
 
@@ -54,23 +61,10 @@ Copy-Item .\continue\config.yaml "$env:USERPROFILE\.continue\config.yaml"
 
 4. Reload VS Code (`Ctrl`+`Shift`+`P` → *Developer: Reload Window*).
 
-### 3. Keep the model in VRAM (context length)
+The shipped `config.yaml` targets the 12 GB profile. On a smaller card, apply the edits in
+[`8GB.md`](8GB.md#edit-configyaml) before copying it.
 
-`config.yaml` pins `contextLength: 8192` per model. A machine‑wide `OLLAMA_CONTEXT_LENGTH` would be
-requested instead and can push the model into CPU offload, which makes tab completion crawl. It is
-currently unset on this machine, but check it after any Ollama tinkering:
-
-```powershell
-# check whether one is set (empty output = not set)
-[Environment]::GetEnvironmentVariable("OLLAMA_CONTEXT_LENGTH", "User")
-
-# remove it - config.yaml sets contextLength per model instead
-[Environment]::SetEnvironmentVariable("OLLAMA_CONTEXT_LENGTH", $null, "User")
-```
-
-With `contextLength: 8192`, the ~9 GB model stays fully in VRAM on a 12 GB GPU.
-
-### 4. Verify
+### 3. Verify
 
 ```powershell
 ollama ps     # after a request: the model should be listed as 100% GPU
@@ -78,27 +72,40 @@ ollama ps     # after a request: the model should be listed as 100% GPU
 
 Type a few lines in a `.py`/`.ts` file and press `Tab` — Continue should complete it inline.
 
-## Autocomplete (Qwen2.5‑Coder 14B)
+## Autocomplete
 
-The inline completion is served by `qwen2.5-coder:14b`, which Continue talks to over Ollama's
-`/api/generate` endpoint with a Fill‑in‑the‑Middle prompt.
+Continue's `autocomplete` role needs a model with a native fill-in-the-middle (FIM) template. Ollama ships the
+Qwen2.5-Coder models with one:
 
-### Keybindings on *this* machine
+```text
+{{- if .Suffix }}<|fim_prefix|>{{ .Prompt }}<|fim_suffix|>{{ .Suffix }}<|fim_middle|>
+```
 
-**Keymap policy: IntelliJ only.** Two competing keymap extensions were installed at some point. The
-Notepad++ one has been **uninstalled** because it re-mapped `Ctrl`+`L` to *Delete Line*, `Ctrl`+`B` to
-*Jump to Bracket* and `Ctrl`+`Y` to *Redo*, colliding with Continue and IntelliJ. Do not install another
-keymap extension — each one silently overrides the IntelliJ mappings, and there is no `"keymap"` setting
-that shows which are active.
+That `{{- if .Suffix }}` branch is the whole point. Continue sends *prefix + suffix* and gets back only the middle,
+so the model completes the line you are on. A model without FIM — Granite, Llama — has a bare `{{ .Prompt }}`
+template with no `.Suffix`, so Continue falls back to pasting a raw `<|fim_prefix|>…<|fim_middle|>` prompt and the
+model continues *past* the insertion point into unrelated prose. Fine for chat, useless for tab completion.
+
+Both `qwen2.5-coder:14b` and `qwen2.5-coder:7b` carry this template. Which one to use depends on your VRAM; see
+[`12GB.md`](12GB.md) or [`8GB.md`](8GB.md).
+
+### Keybindings
+
+**Division of labour: Continue is for autocomplete only, Cline is for everything conversational.** Continue's
+chat-oriented chords are therefore left alone — they are not remapped, and IntelliJ keeps what it wants.
+
+**Keymap policy: IntelliJ first.** Do not install a second keybindings extension. Keymap extensions contribute
+their mappings through `package.json` and the most recently installed one silently wins, so chords quietly change
+meaning. There is no `"keymap"` setting that shows which extensions are active, so a conflict is hard to spot
+until a familiar shortcut stops doing what you expect.
 
 | Source | Bindings | Note |
 | --- | --- | --- |
 | `k--kato.intellij-idea-keybindings` | 220 | IntelliJ mappings, contributed via `package.json` — **not** via a `"keymap"` setting, so nothing in `settings.json` hints at them |
-| `ms-vscode.notepadplusplus-keybindings` | 47 | **Uninstalled.** `.obsolete` lists it as `true` and `extensions.json` no longer registers it, so its bindings are gone — the leftover folder is deleted on the next full VS Code restart |
-| `continue` | 21 | |
+| `continue` | 21 | Only the autocomplete subset is used |
 | `%APPDATA%\Code\User\keybindings.json` | 5 | Yours — two entries *remove* Continue defaults, three *rebind* them |
 
-Verified result per action (re-scanned **after** the Notepad++ removal):
+Autocomplete chords, verified on this machine:
 
 | Action | Chord | Status |
 | --- | --- | --- |
@@ -109,77 +116,34 @@ Verified result per action (re-scanned **after** the Notepad++ removal):
 | Toggle tab autocomplete | `Ctrl`+`K` `Ctrl`+`A` | Works — unclaimed |
 | Toggle next-edit suggestions | `Ctrl`+`K` `Ctrl`+`N` | Works — unclaimed |
 | Open Continue in its own window | `Ctrl`+`K` `Ctrl`+`M` | Works — unclaimed |
-| **Inline edit a selection** | **`Shift`+`Alt`+`E`** | Your custom binding. `Ctrl`+`I` **does not work** — you unbound `continue.focusEdit` and IntelliJ maps `Ctrl`+`I` to suggest / code action |
-| **Focus chat input** | **`Ctrl`+`L`** | ✅ Works now that the Notepad++ keymap is gone — `Ctrl`+`L` is claimed by Continue alone |
-| Focus chat input **without** clearing | **`Shift`+`Alt`+`C`** | Your custom binding. `Ctrl`+`Shift`+`L` is unbound by you and taken by IntelliJ (`selectHighlights`) |
-| Accept a chat diff | `Shift`+`Ctrl`+`Enter` | ⚠️ **Still conflicting** — IntelliJ maps it to *Insert Line Below*. Rebind with the snippet below, or click *Apply* in the diff view |
-| Reject a chat diff | `Ctrl`+`Z` | ⚠️ **Conflict** with *Undo*. Use *Reject* in the diff view |
+
+Cline chords:
+
+| Action | Chord | Status |
+| --- | --- | --- |
+| Open Cline | `Ctrl`+`Shift`+`P` → *Cline: Open in New Tab*, or the activity-bar icon | Works |
+| Add the selection to the chat | `Ctrl`+`'` | Works — jumps to the chat input when nothing is selected |
+
+Editor chords that IntelliJ owns:
+
+| Action | Chord | Status |
+| --- | --- | --- |
 | Command Palette | `Ctrl`+`Shift`+`P` or `Ctrl`+`Shift`+`A` | Both work; `Ctrl`+`Shift`+`A` is the IntelliJ *Find Action* |
-| Extensions view | `Ctrl`+`Shift`+`X` | ⚠️ **Not bound by any of the 37 installed extensions** — see note below |
 
-`Shift`+`Alt`+`E` collides with `PowerShell.ExpandAlias` inside `.ps1` files only. `Shift`+`Alt`+`C` collides
-with IntelliJ's *Copy File Path*, but only when the editor is **not** focused, so it is safe while typing.
+`Shift`+`Alt`+`E` (Continue inline edit) collides with `PowerShell.ExpandAlias` inside `.ps1` files only, and
+`Shift`+`Alt`+`C` with IntelliJ's *Copy File Path*, but only when the editor is **not** focused.
 
-> **On `Ctrl`+`Shift`+`X`:** I checked every registered extension's `contributes.keybindings` and none binds,
-> removes or shadows `workbench.view.extensions` (Extensions) — so the IntelliJ keymap is *not* what disables
-> it. Reliable alternatives: the **Extensions** icon in the activity bar, or `Ctrl`+`Shift`+`A` →
-> *Extensions: View Extensions*.
+Rebind anything via `Ctrl`+`Shift`+`A` → *Preferences: Open Keyboard Shortcuts* (search the command ID, click the
+pencil, press the new chord). Add a `{"key": …, "command": …}` entry to `%APPDATA%\Code\User\keybindings.json` to
+make it permanent. An entry whose command starts with `-` removes a default.
 
-Rebind anything ambiguous via `Ctrl`+`Shift`+`A` → *Preferences: Open Keyboard Shortcuts* (search the
-command ID, click the pencil, press the new chord). Add a `{"key": …, "command": …}` entry to
-`%APPDATA%\Code\User\keybindings.json` to make it permanent.
+Continue commands with no default binding: `continue.newSession`, `continue.viewHistory`,
+`continue.openConfigPage`, `continue.viewLogs`, `continue.selectFilesAsContext`, `continue.rebuildCodebaseIndex`.
 
-Only one genuine conflict is left — *Accept a chat diff*. Append this to `keybindings.json` to move it off
-IntelliJ's *Insert Line Below*:
+## Cline (chat / file editing)
 
-```jsonc
-{ "key": "shift+alt+y", "command": "continue.acceptDiff", "when": "continue.diffVisible" },
-{ "key": "shift+ctrl+enter", "command": "-continue.acceptDiff" }
-```
-
-Commands with no default binding: `continue.newSession`, `continue.viewHistory`, `continue.openConfigPage`,
-`continue.viewLogs`, `continue.selectFilesAsContext`, `continue.rebuildCodebaseIndex`.
-
-Why this model is the only one with the `autocomplete` role in [`continue/config.yaml`](continue/config.yaml):
-
-- Ollama ships `qwen2.5-coder:14b` with a native FIM template
-  (`{{- if .Suffix }}<|fim_prefix|>…`) and advertises the `insert` capability, so Continue uses the real
-  FIM code path — the model gets *prefix + suffix* and returns only the middle.
-- `granite4.2:8b` / `llama3.1:8b` have a bare `{{ .Prompt }}` template with no `.Suffix`. Continue falls
-  back to pasting a raw `<|fim_prefix|>…<|fim_middle|>` prompt, and the model happily continues *past*
-  the insertion point into unrelated prose. Fine for chat, bad for tab completion.
-- `contextLength: 8192` keeps the ~9 GB model fully resident on a 12 GB GPU. Requesting the default large
-  context would push it into CPU offload.
-
-> Tip: the plain `qwen2.5-coder:7b` tag is a non‑FIM derivative and completes noticeably worse. Use
-> `qwen2.5-coder:14b` (or `:32b` on a bigger GPU).
-
-## Chat / prompt (Granite 4.2 8B)
-
-Open the Continue sidebar and pick a chat model in the picker:
-
-- **Granite 4.2 8B** (`granite4.2:8b`) — IBM Granite 4.2, 8.8B params, 128k native context, tool use and
-  "thinking" support. Measured ~105 tok/s vs ~65 tok/s for the 14B on this machine, so it is the default
-  pick for plain conversation, planning and explaining code.
-- **Llama 3.1 8B** (`llama3.1:8b`) — very fast and light; fallback only.
-- **Qwen2.5‑Coder 14B** — use when the answer is *code* rather than prose.
-
-Typical prompts:
-
-```text
-Explain what this module does and where the state transitions happen.
-Write a pytest suite for src/parser.py covering malformed input.
-Draft a migration plan from the old REST client to the new SDK.
-```
-
-`Shift`+`Alt`+`C` focuses the chat input **without** clearing the previous question; `Shift`+`Alt`+`E` puts the
-current selection into inline edit mode (`Esc` leaves it). Add files with `@` in the chat input or run
-*continue.selectFilesAsContext* from the Command Palette.
-
-## Cline (agentic chat / file editing)
-
-Cline is the agent-style counterpart to Continue's plain chat: you describe a change, it plans, asks
-permission to run commands, and applies multi-file edits with checkpoints.
+Cline is the agent-style half of this setup: you describe a change, it plans, asks permission to run commands, and
+applies multi-file edits with checkpoints. Continue handles autocomplete; Cline handles everything conversational.
 
 Installed here as `saoudrizwan.claude-dev` (Cline `4.1.22`).
 
@@ -193,8 +157,8 @@ Installed here as `saoudrizwan.claude-dev` (Cline `4.1.22`).
 2. Open Cline — click the Cline icon in the activity bar, or `Ctrl`+`Shift`+`P` → *Cline: Open in New Tab*.
 3. Click the **settings gear** (bottom of the Cline sidebar) → **API Provider** → **Ollama**.
 4. **Base URL** defaults to `http://localhost:11434` — leave it unless you changed Ollama's port.
-5. **Model Id** → type the exact tag from `ollama list`, e.g. `granite4.2:8b` (fast chat) or
-   `qwen2.5-coder:14b` (code/editing). Cline can also fetch the list from `http://localhost:11434/api/tags`.
+5. **Model Id** → type the exact tag from `ollama list`, e.g. `granite4.2:8b` (fast chat) or the code model from
+   your [hardware profile](12GB.md). Cline can also fetch the list from `http://localhost:11434/api/tags`.
 6. Enable **Use Compact Prompt** (Settings → Features) — smaller context, much faster replies on a local model.
 7. Click **Done**.
 
@@ -214,9 +178,9 @@ curl.exe http://localhost:11434/api/tags
 - Cline asks before running terminal commands; auto‑approve per‑command or per‑tool as you get comfortable.
 - `Ctrl`+`'` adds the current selection to the chat, or jumps to the chat input when nothing is selected.
 
-Point Cline at the same 14B model Continue uses for autocomplete, so the code it writes matches the code it
-will be completing. Granite 4.2 8B is faster for planning and explanation; the 14B is better for the actual
-edits.
+Point Cline at the same code model Continue uses for autocomplete, so the code it writes matches the code it will
+be completing. Granite 4.2 8B is faster for planning and explanation; the code model is better for the actual edits.
+The tag depends on your VRAM — see [`12GB.md`](12GB.md) or [`8GB.md`](8GB.md).
 
 ### Where Cline stores things
 
@@ -241,7 +205,7 @@ Prefer the in-editor settings UI over hand-editing these; the files are rewritte
 | --- | --- |
 | "Could not connect to Ollama" | `curl.exe http://localhost:11434/api/tags` — if it fails, start Ollama (`ollama serve`) |
 | Empty/garbled replies | Wrong Model Id — use the exact tag from `ollama list` |
-| Very slow first reply | Model not loaded yet; run `ollama run qwen2.5-coder:14b` once to warm it |
+| Very slow first reply | Model not loaded yet; warm it with `ollama run <tag>` once |
 | Replies get slower as the task grows | Enable **Use Compact Prompt**; start a new task when context fills up |
 | Cline ignores project files | Add the folder to Cline's approved working directory |
 
@@ -309,7 +273,7 @@ Three limits apply: a **5-hour rolling window**, **weekly**, and **monthly**. Ch
 
 | Situation | Model |
 | --- | --- |
-| Inline autocomplete, quick edits | `qwen2.5-coder:14b` (local, `Tab`) |
+| Inline autocomplete, quick edits | The FIM code model from your [hardware profile](12GB.md), via `Tab` |
 | Chat, planning, explanations | `granite4.2:8b` (local) |
 | Multi-file refactor, long context | `cline-pass/glm-5.3`, or `cline-pass/qwen3.7-plus` past 256 K |
 | Hardest reasoning, budget allows | `cline-pass/kimi-k3` |
@@ -352,37 +316,37 @@ That gives you IntelliSense and validation of `roles:` / `contextLength:` inside
 
 ## Troubleshooting
 
+Hardware-specific symptoms (CPU offload, out-of-memory) are in the profile for your card — [`12GB.md`](12GB.md) or
+[`8GB.md`](8GB.md).
+
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | No completions on `Tab` | Continue not installed/enabled, or Ollama unreachable | `ollama list` must show the model; reload the window; check the Continue output view |
-| Completions feel sluggish | CPU offload | `ollama ps` — if not 100% GPU, lower `contextLength` or clear `OLLAMA_CONTEXT_LENGTH` |
-| Completion continues into prose | A non-FIM model holds the `autocomplete` role | Only `qwen2.5-coder:14b` supports FIM; keep `autocomplete` off Granite/Llama |
-| Ollama "not enough memory" | Model + context exceeds VRAM | Close other GPU apps, or keep `contextLength: 8192` |
-| Chat replies are generic | Fast chat model selected for a code question | Switch to *Qwen2.5‑Coder 14B* in the model picker |
-| Semantic search returns nothing | Embed role points at the built-in embedder | Select *Nomic Embed v2 MoE*, then rebuild the index |
+| Completion continues into prose | A non-FIM model holds the `autocomplete` role | Only a Qwen2.5-Coder tag supports FIM; keep `autocomplete` off Granite/Llama |
 | Cline cannot reach Ollama | Wrong Base URL | Use `http://localhost:11434`, then `ollama serve` |
+| Chat replies are generic | Fast chat model selected for a code question | Switch Cline to the code model from your hardware profile |
+| Semantic search returns nothing | Embed role points at the built-in embedder | Select *Nomic Embed v2 MoE*, then rebuild the index |
 
 ## Daily workflow
 
 1. `ollama serve` already runs as a service — nothing to launch.
-2. Code in VS Code; `Tab` accepts a Qwen2.5‑Coder completion, `Ctrl`+`Alt`+`Space` forces one.
-3. `Ctrl`+`L` for chat, `Shift`+`Alt`+`E` to edit a selection. Avoid `Shift`+`Ctrl`+`Enter` —
-   IntelliJ maps it to *Insert Line Below*.
-4. Cline when the change spans several files or needs commands run.
-5. `ollama ps` first whenever something feels slow — note it lists only *loaded* models, so an empty result
+2. Code in VS Code; `Tab` accepts a completion, `Ctrl`+`Alt`+`Space` forces one.
+3. Cline for anything conversational or multi-file.
+4. `ollama ps` first whenever something feels slow — note it lists only *loaded* models, so an empty result
    just means nothing has been requested yet.
 
 ## FAQ
 
 **Do I need GitHub Copilot or a cloud API key?**
-No. All four models run through Ollama on localhost.
+No. Every local model runs through Ollama on localhost.
 
 **Can I run this on CPU only?**
-Yes, but the 14B model will be slow for tab completion — expect seconds instead of milliseconds.
+Yes, but tab completion will be slow — expect seconds instead of milliseconds. Prefer the smaller FIM model; see
+the note in [`12GB.md`](12GB.md).
 
 **Why not use one model for everything?**
-Granite 4.2 8B is ~1.6× faster for prose and Qwen2.5‑Coder 14B is much better at code, especially with
-FIM. Splitting the roles gets both.
+Granite 4.2 8B is ~1.6× faster for prose, and the FIM code model is much better at code, especially with FIM.
+Splitting the roles gets both.
 
 **How do I add a model?**
 Add an entry under `models:` in `config.yaml`, run `ollama pull <tag>`, then select it in the model picker.

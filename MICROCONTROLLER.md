@@ -8,7 +8,7 @@ model to use for which job.
 
 ## Contents
 
-- [Why `pio` is not on `PATH`](#why-pio-is-not-on-path)
+- [Running PlatformIO](#running-platformio)
 - [Project layout](#project-layout)
 - [platformio.ini](#platformioini)
 - [Build, flash, monitor](#build-flash-monitor)
@@ -18,18 +18,40 @@ model to use for which job.
 - [Rules files: teaching the models your board](#rules-files-teaching-the-models-your-board)
 - [Gotchas](#gotchas)
 
-## Why `pio` is not on `PATH`
+## Running PlatformIO
 
-`Get-Command pio` fails — the Core install is self-contained and VS Code finds it by absolute path. Use the
-full path, or add it once per shell:
+There are two ways to drive PlatformIO, and both work out of the box — pick whichever suits the moment.
+
+**From the IDE — no setup at all.** The PlatformIO task bar at the bottom of VS Code (→ build, ✓ upload, 🔌 monitor)
+and the *PlatformIO: …* entries in the Command Palette drive the same Core install the extension manages itself.
+This is the path to use for normal work.
+
+**From a terminal — one line per shell.** `pio` lives at a fixed, known location:
+
+```text
+%USERPROFILE%\.platformio\penv\Scripts\pio.exe
+```
+
+Core is installed as a self-contained Python virtual environment, so that folder is not on `PATH` and `Get-Command
+pio` will not find it. Nothing is missing — call it by full path, or add the folder for the current shell and use
+the short name from then on:
 
 ```powershell
+# call it by full path
+& "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" --version
+```
+
+```powershell
+# or add the folder to this shell, then use the short name
 $env:Path += ";$env:USERPROFILE\.platformio\penv\Scripts"
 pio --version    # PlatformIO Core, version 6.2.0
 ```
 
-The first `pio run` in a fresh project downloads the platform toolchain (100s of MB). They are already
-present for `atmelavr` and `espressif32`; any other platform costs a one-time download.
+The `$env:Path +=` form lasts until the shell closes. Add the same folder under *Environment Variables → Path* to
+make it permanent across new terminals.
+
+> The first build in a fresh project downloads the platform toolchain (100s of MB). `atmelavr` and `espressif32`
+> are already fetched; any other platform costs that one-time download.
 
 ## Project layout
 
@@ -94,6 +116,8 @@ framework = arduino
 Two envs, one config file — you can flash an ESP32 and an Uno from the same repo.
 
 ## Build, flash, monitor
+
+From a terminal, with `pio` reachable as described in [Running PlatformIO](#running-platformio):
 
 ```powershell
 pio run                       # build every env in default_envs
@@ -186,7 +210,7 @@ chat with `@`. Continue picks up `.continue/rules/*.md` automatically.
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `pio` not recognised | Core not on `PATH` | Prepend `%USERPROFILE%\.platformio\penv\Scripts` |
+| `pio` not recognised in a terminal | Core's `Scripts` folder is not on `PATH` — expected, see [Running PlatformIO](#running-platformio) | Prepend `%USERPROFILE%\.platformio\penv\Scripts`, or call `pio.exe` by full path |
 | Code in `src/` is not compiled | File extension or location | Only `.c/.cpp/.ino/.S` under `src/` is built |
 | Garbled serial output | `monitor_speed` mismatch | 115200 for ESP32, 9600 for Uno |
 | `exit status 1` with no useful error | Crashed toolchain | `pio run -t fullclean`, then rebuild |
