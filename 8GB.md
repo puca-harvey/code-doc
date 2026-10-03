@@ -1,6 +1,6 @@
 # Hardware profile: 8 GB VRAM
 
-Reference card: **NVIDIA GeForce RTX 4060** (8 GB, laptop). This page is **derived, not measured** — it was written
+Reference card: **NVIDIA GeForce RTX 4060** (8 GB). This page is **derived, not measured** — it was written
 from VRAM arithmetic and model sizes published by Ollama, on a machine that has a 12 GB card. Treat the layout
 below as a starting point and confirm it with `ollama ps` as described in *Verify*.
 
