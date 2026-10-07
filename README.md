@@ -218,7 +218,8 @@ number here.** Source: [Cline Free](https://docs.cline.bot/getting-started/free-
 [ClinePass](https://docs.cline.bot/getting-started/clinepass).
 
 ### Cline Free / Ollama Cloud
-\n\nSince `deepseek-v4.1-flash` is no longer available in the Cline free tier, the best stable alternative is using free tier models via **Ollama Cloud**.
+Models in Cline free tier are subject to change without notice. Just give a try what is available.
+The best stable alternative is using free tier models via **Ollama Cloud**.
 
 **Prerequisites:**
 1. Sign up at [ollama.com](https://ollama.com).
@@ -231,7 +232,7 @@ number here.** Source: [Cline Free](https://docs.cline.bot/getting-started/free-
 - **Provider:** `Ollama`
 - **Model ID:** `gemma4:cloud`
 
-Rotating, limited-time promotions on select models, at no cost up to a quota, may still be available. Any account can use them.
+Rotating, limited-time promotions on select models, at no cost up to a quota, may still be available in cline. Any account can use them.
 
 - Models appear tagged **FREE** in the picker under both the **Cline** and **ClinePass** providers.
 - The promotion set changes over time, so treat the list below as "currently referenced", not a promise.
