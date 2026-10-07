@@ -210,24 +210,27 @@ Prefer the in-editor settings UI over hand-editing these; the files are rewritte
 | Replies get slower as the task grows | Enable **Use Compact Prompt**; start a new task when context fills up                   |
 | Cline ignores project files          | Add the folder to Cline's approved working directory                                    |
 
-## Cloud models: Cline Free and ClinePass
+## Cloud Models and BYOK
 
-Local Ollama is the default, but Cline can also reach hosted models. Two of those providers are worth
-knowing about. **Pricing and model lineups change often — verify in the model picker before trusting a
-number here.** Source: [Cline Free](https://docs.cline.bot/getting-started/free-models) /
-[ClinePass](https://docs.cline.bot/getting-started/clinepass).
+While local Ollama is the default, Cline can also connect to hosted models. The most flexible approach is **BYOK (Bring Your Own Key)**, where you obtain an API key directly from a provider (e.g., DeepSeek, Anthropic, OpenAI) and configure it in Cline's settings. This gives you direct control over costs and model versions.
 
-### Cline Free / Ollama Cloud
+### Configuring BYOK in Cline
 
-Models in Cline free tier are subject to change without notice. Just give a try what is available.
-The best stable alternative is using free tier models via **Ollama Cloud**.
+1. Open the Cline settings (gear icon in the editor).
+2. Select the appropriate **API Provider** from the dropdown.
+3. Enter your **API Key**.
+4. Choose your preferred **Model** from the list.
 
-**Prerequisites:**
+### Free Alternatives
 
-1. Sign up at [ollama.com](https://ollama.com).
-2. Initialize the cloud model by running once in your terminal:
-   ```powershell
-   ollama run gemma4:cloud
+If you prefer not to use a paid API key, there are a few free options:
+
+- **Ollama Cloud**: Some models can be accessed for free via Ollama's cloud tier. To initialize a cloud model, run it once in your terminal:
+    ```powershell
+    ollama run gemma4:cloud
+    ```
+    After running this, the model will be available for selection in Cline.
+- **Cline Free**: Check the [Cline Free models documentation](https://docs.cline.bot/getting-started/free-models) for current available free tiers. Note that these offerings change frequently.
    ```
 
 **Configuration in Cline:**
