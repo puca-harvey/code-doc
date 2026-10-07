@@ -217,9 +217,21 @@ knowing about. **Pricing and model lineups change often — verify in the model 
 number here.** Source: [Cline Free](https://docs.cline.bot/getting-started/free-models) /
 [ClinePass](https://docs.cline.bot/getting-started/clinepass).
 
-### Cline Free
+### Cline Free / Ollama Cloud
+\n\nSince `deepseek-v4.1-flash` is no longer available in the Cline free tier, the best stable alternative is using free tier models via **Ollama Cloud**.
 
-Rotating, limited-time promotions on select models, at no cost up to a quota. Any account can use them.
+**Prerequisites:**
+1. Sign up at [ollama.com](https://ollama.com).
+2. Initialize the cloud model by running once in your terminal:
+   ```powershell
+   ollama run gemma4:cloud
+   ```
+
+**Configuration in Cline:**
+- **Provider:** `Ollama`
+- **Model ID:** `gemma4:cloud`
+
+Rotating, limited-time promotions on select models, at no cost up to a quota, may still be available. Any account can use them.
 
 - Models appear tagged **FREE** in the picker under both the **Cline** and **ClinePass** providers.
 - The promotion set changes over time, so treat the list below as "currently referenced", not a promise.
@@ -231,7 +243,7 @@ Currently referenced in your Cline `4.1.22` bundle:
 
 | Model ID | Notes |
 | --- | --- |
-| `cline-free/deepseek-v4.1-flash` | Same weights as the ClinePass Flash tier — good default |
+| `ollama/gemma4:cloud` | Stable free tier via Ollama Cloud — best general-purpose free bet |
 | `cline-free/mimo-v2.6-flash` | Very cheap tier; fine for planning and chat |
 | `cline-free/muse-spark-1.3-contributor` | Smallest/cheapest; best for cheap mechanical edits |
 
@@ -278,7 +290,7 @@ Three limits apply: a **5-hour rolling window**, **weekly**, and **monthly**. Ch
 | Chat, planning, edits, explanations | `ornith-1.5:9b` (local) |
 | Multi-file refactor, long context | `cline-pass/glm-5.3`, or `cline-pass/qwen3.7-plus` past 256 K |
 | Hardest reasoning, budget allows | `cline-pass/kimi-k3` |
-| ClinePass quota spent | `cline-free/deepseek-v4.1-flash` |
+| ClinePass quota spent | `ollama-cloud/gemma4` |
 | Private code that must not leave the machine | Local Ollama only |
 
 Switching model mid-task is free on the local side, so there is no reason to burn ClinePass quota on
