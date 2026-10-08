@@ -2,22 +2,21 @@
 
 ## Table of Contents
 
-[Contents](#contents)
-[Requirements](#requirements)
-[Install](#install)
-  [1. Ollama + models](#1-ollama-models)
-  [2. Continue extension in VS Code](#2-continue-extension-in-vs-code)
-  [3. Verify](#3-verify)
-[Autocomplete](#autocomplete)
-[Cline (chat / file editing)](#cline-chat-file-editing)
-[Cloud Models and BYOK](#cloud-models-and-byok)
-[Embeddings / codebase awareness](#embeddings-codebase-awareness)
-[Refreshing the config schema after a Continue upgrade](#refreshing-the-config-schema-after-a-continue-upgrade)
-[Troubleshooting](#troubleshooting)
-[Daily workflow](#daily-workflow)
-[FAQ](#faq)
-
-
+- [Contents](#contents)
+- [Requirements](#requirements)
+- [Install](#install)
+  - [1. Ollama + models](#1-ollama-models)
+  - [2. Continue extension in VS Code](#2-continue-extension-in-vs-code)
+  - [3. Verify](#3-verify)
+  - [4. Cline extension in VS Code](#4-cline-extension-in-vs-code)
+- [Autocomplete](#autocomplete)
+- [Cline (chat / file editing)](#cline-chat-file-editing)
+- [Cloud Models and BYOK](#cloud-models-and-byok)
+- [Embeddings / codebase awareness](#embeddings-codebase-awareness)
+- [Refreshing the config schema after a Continue upgrade](#refreshing-the-config-schema-after-a-continue-upgrade)
+- [Troubleshooting](#troubleshooting)
+- [Daily workflow](#daily-workflow)
+- [FAQ](#faq)
 
 VS Code with AI support but **without GitHub Copilot**:
 
@@ -38,8 +37,7 @@ Everything runs locally, so there is no per-request cost and no data sent to a c
 | [`MICROCONTROLLER.md`](MICROCONTROLLER.md)     | PlatformIO / embedded workflow: `platformio.ini`, build & flash, debugging, rules files, model split for firmware. |
 | [`LICENSE`](LICENSE)                           | Repository license.                                                                                                |
 
-**VRAM decides which profile applies.** The general setup below is hardware-independent; the model list and context
-length are not. Follow the profile for your card and skip the model-specific parts here.
+VRAM decides which profile applies; see the hardware‑specific files for model list and context length.
 
 | Card             | Profile              |
 | ---------------- | -------------------- |
@@ -56,15 +54,9 @@ length are not. Follow the profile for your card and skip the model-specific par
 ## Install
 
 ### 1. Ollama + models
-
-```powershell
-# install Ollama from https://ollama.com/download, then follow the profile for your card:
-#   12GB.md  -> ollama pull qwen2.5-coder:14b ; ollama pull ornith-1.5:9b ; ...
-#   8GB.md   -> ollama pull qwen2.5-coder:7b  ; ollama pull ornith-1.5:9b ; ...
-ollama list                                # verify
-```
-
-Model choice, sizes and context length are hardware-specific and live in the profiles.
+- Install Ollama from https://ollama.com/download.
+- Pull models for your GPU VRAM (see 12GB.md or 8GB.md).
+- Verify with `ollama list`.
 
 ### 2. Continue extension in VS Code
 
@@ -91,6 +83,27 @@ ollama ps     # after a request: the model should be listed as 100% GPU
 
 Type a few lines in a `.py`/`.ts` file and press `Tab` — Continue should complete it inline.
 
+
+### 4. Cline extension in VS Code
+
+1. VS Code → Extensions view (activity-bar icon, or `Ctrl`+`Shift`+`P` → _Extensions: View Extensions_) →
+   search **Cline** → _Install_.
+   (Or download the `.vsix` from the
+   [Cline marketplace page](https://marketplace.visualstudio.com/items?itemName=saoudrizwan.claude-dev)
+   and run _Extensions: Install from VSIX…_.)
+2. Open Cline — click the Cline icon in the activity bar, or `Ctrl`+`Shift`+`P` → _Cline: Open in New Tab_.
+3. Click the **settings gear** (bottom of the Cline sidebar) → **API Provider** → **Ollama**.
+4. **Base URL** defaults to `http://localhost:11434` — leave it unless you changed Ollama's port.
+5. **Model Id** → type the exact tag from `ollama list`, e.g. `ornith-1.5:9b` (fast chat) or the code model from
+   your [hardware profile](12GB.md). Cline can also fetch the list from `http://localhost:11434/api/tags`.
+6. Enable **Use Compact Prompt** (Settings → Features) — smaller context, much faster replies on a local model.
+7. Click **Done**.
+
+Ollama already runs on port `11434` as a background service, so there is nothing else to start. Confirm with:
+
+```powershell
+curl.exe http://localhost:11434/api/tags
+```
 ## Autocomplete
 
 Continue's `autocomplete` role needs a model with a native fill-in-the-middle (FIM) template. Ollama ships the
@@ -197,10 +210,11 @@ curl.exe http://localhost:11434/api/tags
 - Cline asks before running terminal commands; auto‑approve per‑command or per‑tool as you get comfortable.
 - `Ctrl`+`'` adds the current selection to the chat, or jumps to the chat input when nothing is selected.
 
-Point Cline at `ornith-1.5:9b` for everything conversational, including edits. It holds the `chat`, `edit` and
+Point Continue at `ornith-1.5:9b` for everything conversational, including edits. It holds the `chat`, `edit` and
 `apply` roles in `config.yaml`, because it is ~1.6× faster than the code model. `qwen2.5-coder:14b` keeps only
-`autocomplete`, where its native FIM template is the only thing that matters. If inline edits feel weaker than when the
-14 B held them, move `edit` and `apply` back in `config.yaml` — it is a two-line change.
+`autocomplete`, where its native FIM template is the only thing that matters. 
+
+But actually for all these roles we are going to use Cline with a cloud model. So that qwen2.5-coder:14b can stay in VRAM for autocomplete. 
 
 ### Where Cline stores things
 
@@ -231,7 +245,7 @@ Prefer the in-editor settings UI over hand-editing these; the files are rewritte
 
 ## Cloud Models and BYOK
 
-While local Ollama is the default, Cline can also connect to hosted models. The most flexible approach is **BYOK (Bring Your Own Key)**, where you obtain an API key directly from a provider (e.g., DeepSeek, Anthropic, OpenAI) and configure it in Cline's settings. This gives you direct control over costs and model versions.
+Cline can utilize many providers, including cloud-based models and those run locally within Ollama. The most flexible approach is **BYOK (Bring Your Own Key)**, where you obtain an API key directly from a provider (e.g., DeepSeek, Anthropic, OpenAI) and configure it in Cline's settings. This gives you direct control over costs and model versions.
 
 ### Configuring BYOK in Cline
 
