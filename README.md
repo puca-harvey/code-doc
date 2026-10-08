@@ -221,24 +221,60 @@ While local Ollama is the default, Cline can also connect to hosted models. The 
 3. Enter your **API Key**.
 4. Choose your preferred **Model** from the list.
 
+### BYOK Examples (DeepSeek and Mistral)
+
+| Model ID | Context Window | Best For | Cost (per 1M tokens) — Free credits used first, then real money | Register and obtain API key |
+| --- | --- | --- | --- | --- |
+| `deepseek-flash` | 1M | General-purpose chat, code understanding, reasoning. Good for everyday coding questions. | Input: $0.30<br>Cached: $0.006<br>Output: $1.20<br>(Off-peak: Input $0.15, Cached $0.003, Output $0.60) | [DeepSeek Platform](https://platform.deepseek.com) |
+| `deepseek-v4-pro` | 1M | Code generation, complex reasoning, agentic tasks. Optimized for coding agents. | Input: $1.32<br>Cached: $0.044<br>Output: $3.96<br>(Off-peak: Input $0.66, Cached $0.022, Output $1.98) | [DeepSeek Platform](https://platform.deepseek.com) |
+| `mistral-large-4` | 1M | Complex reasoning, multilingual tasks, advanced code generation. | Input: $0.68<br>Cached: $0.07<br>Output: $2.09<br>(Off-peak pricing applies) | [Mistral Console](https://console.mistral.ai/registration/) |
+
+
 ### Free Alternatives
 
 If you prefer not to use a paid API key, there are a few free options:
 
-- **Ollama Cloud**: Some models can be accessed for free via Ollama's cloud tier. To initialize a cloud model, run it once in your terminal:
-    ```powershell
-    ollama run gemma4:cloud
-    ```
-    After running this, the model will be available for selection in Cline.
-- **Cline Free**: Check the [Cline Free models documentation](https://docs.cline.bot/getting-started/free-models) for current available free tiers. Note that these offerings change frequently.
-   ```
+#### Ollama Cloud Models (Free Tier + Pay-As-You-Go)
+
+Ollama Cloud provides a free tier with starter usage credits. Once those credits are exhausted, requests draw from purchased usage credits (pay-as-you-go). **Free accounts include 1 concurrent request.** To initialize a cloud model, run it once in your terminal:
+
+```powershell
+ollama run gemma4:cloud
+ollama run gpt-oss:20b-cloud
+ollama run gpt-oss:120b-cloud
+ollama run nemotron-3-nano:30b-cloud
+ollama run nemotron-3-super:cloud
+ollama run nemotron-3-ultra:cloud
+```
+
+After running, the model will be available for selection in Cline (Provider: `Ollama`, Model ID: e.g., `gemma4:cloud`).
+
+| Model ID | Context Window | Best For | Cost (per 1M tokens) — Free credits used first, then real money | How to Call |
+| --- | --- | --- | --- | --- |
+| `gemma4:cloud` (or `gemma3:cloud`) | 128K | General-purpose chat, multimodal (text + images), summarization, reasoning. Good default for everyday coding questions. | Input: $0.14<br>Cached: $0.05<br>Output: $0.40 | `ollama run gemma4:cloud` |
+| `gpt-oss:20b-cloud` | 128K | Agentic tasks, function calling, web browsing, python tool calls, structured outputs. Lower latency, good for specialized/local use-cases. Configurable reasoning effort (low/medium/high). | Input: $0.07<br>Cached: $0.035<br>Output: $0.30 | `ollama run gpt-oss:20b-cloud` |
+| `gpt-oss:120b-cloud` | 128K | Complex reasoning, agentic workflows, higher quality outputs. Full chain-of-thought access for debugging. Apache 2.0 license. | Input: $0.15<br>Cached: $0.014<br>Output: $0.60 | `ollama run gpt-oss:120b-cloud` |
+| `nemotron-3-nano:30b-cloud` | 1M | Efficient agentic tasks, long-context reasoning + non-reasoning unified model. Hybrid MoE (3.5B active / 30B total). Good for coding agents, IT automation. | Input: $0.06<br>Output: $0.24 | `ollama run nemotron-3-nano:30b-cloud` |
+| `nemotron-3-super:cloud` | 256K | Complex multi-agent applications, collaborative agents, high-volume workloads (e.g., IT ticket automation). 12B active / 120B total MoE. Strong on SWE-Bench, LiveCodeBench. | Input: $0.015<br>Cached: $0.015<br>Output: $0.60 | `ollama run nemotron-3-super:cloud` |
+| `nemotron-3-ultra:cloud` | 256K (1M effective) | Long-running agent workflows, deep research, complex enterprise workflows across hundreds of steps. 55B active / 550B total. Best for agent orchestration, coding agents. | Input: $0.10<br>Cached: $0.10<br>Output: $3.00 | `ollama run nemotron-3-ultra:cloud` |
+
+> **Notes on Ollama Cloud pricing:**
+> - **Free tier:** Starter usage credits included (resets monthly from sign-up date). Only a subset of "starter models" available on Free plan.
+> - **Pro ($20/mo):** $60 usage credits/month, access to larger pro models, 3 concurrent requests.
+> - **Max ($100/mo):** $300 usage credits/month, early access to newest models, 10 concurrent requests.
+> - **Off-peak pricing** (outside 12:00–18:00 UTC weekdays, all day weekends) applies to some models.
+> - Running models locally via Ollama is always unlimited and free.
+
+#### Cline Free
+
+Check the [Cline Free models documentation](https://docs.cline.bot/getting-started/free-models) for current available free tiers. Note that these offerings change frequently.
 
 **Configuration in Cline:**
 
 - **Provider:** `Ollama`
-- **Model ID:** `gemma4:cloud`
+- **Model ID:** `gemma4:cloud` (or any of the cloud models above)
 
-Rotating, limited-time promotions on select models, at no cost up to a quota, may still be available in cline. Any account can use them.
+Rotating, limited-time promotions on select models, at no cost up to a quota, may still be available in Cline. Any account can use them.
 
 - Models appear tagged **FREE** in the picker under both the **Cline** and **ClinePass** providers.
 - The promotion set changes over time, so treat the list below as "currently referenced", not a promise.
