@@ -17,7 +17,6 @@ It is a **separate provider** from Cline (usage-billing); you can hold both.
 | `cline-pass/mimo-v2.5-pro`              | $1.74 / $3.48                                 |                                                    |
 | `cline-pass/minimax-m3`                 | $0.30 / $1.20                                 |                                                    |
 | `cline-pass/muse-spark-1.3-contributor` | $0.10 / $0.20                                 | Cheapest overall                                   |
-| `cline-pass/qwen3.8-max`                | $2.00 / $6.00                                 | High quality on code                               |
 | `cline-pass/qwen3.7-max`                | $2.50 / $7.50                                 |                                                    |
 | `cline-pass/qwen3.7-plus`               | $0.40 / $1.60 up to 256 K, then $1.20 / $4.80 | **Large context** — the pick for big refactors     |
 
@@ -35,7 +34,7 @@ Three limits apply: a **5-hour rolling window**, **weekly**, and **monthly**. Ch
 | Situation                                    | Model                                                                             |
 | -------------------------------------------- | --------------------------------------------------------------------------------- |
 | Inline autocomplete (`Tab`)                  | The FIM code model from your [hardware profile](12GB.md) — the only role it holds |
-| Chat, planning, edits, explanations          | `ornith-1.5:9b` (local)                                                           |
+| Chat, planning, edits, explanations          | `ornith-1.5:35b` (local)                                                          |
 | Multi-file refactor, long context            | `cline-pass/glm-5.3`, or `cline-pass/qwen3.7-plus` past 256 K                     |
 | Hardest reasoning, budget allows             | `cline-pass/kimi-k3`                                                              |
 | ClinePass quota spent                        | `ollama-cloud/gemma4`                                                             |

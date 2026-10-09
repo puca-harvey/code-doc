@@ -165,12 +165,12 @@ invent API calls.** Everything must compile against the real library on disk.
 
 | Task | Model | Why |
 | --- | --- | --- |
-| Plan a task split, choose libraries | `ornith-1.5:9b` (local) | Fast; planning is prose, not code |
-| Write a driver or fix a compile error | `ornith-1.5:9b` (local) | Holds `edit`/`apply`; ~1.6× faster than the code model |
-| Explain a register or a crash dump | `ornith-1.5:9b` (local) | Explanation, not generation |
+| Plan a task split, choose libraries | `ornith-1.5:35b` (local) | Fast; planning is prose, not code |
+| Write a driver or fix a compile error | `ornith-1.5:35b` (local) | Holds `edit`/`apply`; ~3 B active MoE fits the card, 65 536 context |
+| Explain a register or a crash dump | `ornith-1.5:35b` (local) | Explanation, not generation |
 | Inline edit of one line while typing | `qwen2.5-coder:14b` (local) | The only FIM model; `Tab` completion |
-| Long multi-file refactor | ClinePass — `cline-pass/glm-5.3` | Local 9B loses coherence across a big diff |
-| Large-context reading (datasheets, header trees) | ClinePass — `cline-pass/qwen3.7-plus` | >256 K context tier; local 8 K is far too small |
+| Long multi-file refactor | ClinePass — `cline-pass/glm-5.3` | 35 B can lose coherence across a big diff even at 65 K |
+| Large-context reading (datasheets, header trees) | ClinePass — `cline-pass/qwen3.7-plus` | >256 K context tier; local 65 K is too small |
 | When the quota is gone | `cline-free/*` | See [`README.md`](README.md) for the full model table |
 
 Practical split: **local for day-to-day edits, ClinePass when a task outgrows 8 K of context or spans many
