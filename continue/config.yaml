@@ -30,16 +30,14 @@ models:
       - autocomplete # tab completion; needs native FIM
 
   # ---------------------------------------------------------
-  # CHAT / EDIT / APPLY MODEL: Ornith 1.5 9B
-  # (qwen35 architecture, 9.0B params, Q4_K_M, 262k context,
-  # tool use, thinking and vision).
+  # CHAT / EDIT / APPLY MODEL: Ornith 1.5 35B
+  # (qwen35 architecture, ~35.5B total / ~3B active MoE, Q4_K_M,
+  # 262k context, tool use, thinking and vision).
   # Handles the conversational and code-transform roles. It replaced
-  # Granite 4.2 8B and Llama 3.1 8B (no longer pulled locally) and
-  # took chat/edit/apply over from Qwen2.5-Coder, which is the
-  # slower of the two in isolation: ~64 tok/s against ~103 tok/s
-  # here, measured with the other model stopped. A run with both
-  # resident on the 12 GB card reports far lower numbers for both
-  # (the 14B fell to ~15 tok/s), so do not benchmark them together.
+  # prior 9B Ornith 1.5 (superseded, no longer pulled locally). MoE:
+  # only ~3B params are active at any moment, so that active footprint
+  # fits comfortably in the 12 GB RTX 5070 VRAM; it is the ~22 GB total
+  # (all expert weights on disk) that never all fits resident.
   # It cannot serve autocomplete: its Ollama Modelfile template is a
   # bare "{{ .Prompt }}" with no .Suffix, so Continue would fall back
   # to sending a raw "<|fim_prefix|>...<|fim_middle|>" prompt, which
@@ -48,15 +46,17 @@ models:
   # still win despite the speed; move those two roles back to it if
   # its edits feel stronger. That is a preference call - neither
   # model is measurably better at edits from here.
-  # contextLength 8192 for the same VRAM reason as the 14B above: the
-  # model advertises a 262k window and the machine-wide
-  # OLLAMA_CONTEXT_LENGTH=65536 would otherwise be requested. Keep
-  # this set - the 8 GB profile relies on lowering it to stay resident.
+  # contextLength 65536 (matches the OLLAMA_CONTEXT_LENGTH=65536 env
+  # default): it does not cap the 3B active weights (resident), but
+  # it does size the KV cache, so 65536 tokens costs ~0.4 GB - small
+  # and resident, and lets long chats/threads/diffs land in one
+  # request without offloading. The 14B autocomplete STAYS at 8192 so
+  # it never thrashes during tab completion.
   # ---------------------------------------------------------
-  - name: Ornith 1.5 9b
+  - name: Ornith 1.5 35B
     provider: ollama
-    model: ornith-1.5:9b
-    contextLength: 8192
+    model: ornith-1.5:35b
+    contextLength: 65536
     roles:
       - chat
       - edit

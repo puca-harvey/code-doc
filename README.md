@@ -114,7 +114,7 @@ Qwen2.5-Coder models with one:
 ```
 
 That `{{- if .Suffix }}` branch is the whole point. Continue sends _prefix + suffix_ and gets back only the middle,
-so the model completes the line you are on. A model without FIM — the chat model, `ornith-1.5:9b` — has a bare
+so the model completes the line you are on. A model without FIM — the chat model, `ornith-1.5:35b` — has a bare
 `{{ .Prompt }}` template with no `.Suffix`, so Continue falls back to pasting a raw `<|fim_prefix|>…<|fim_middle|>` prompt
 and the model continues _past_ the insertion point into unrelated prose. Fine for chat, useless for tab completion.
 
@@ -384,7 +384,7 @@ Autocomplete requires a model with a native FIM (Fill-in-the-Middle) template, s
 Depends whether it is a local or a cloud model.
 For installing a local model and running it, see the [Ollama documentation](https://ollama.com/docs/get-started).
 For Ollama cloud models you have to run it once, and then it will be available to Cline.
-For BYOK modells in cline, chose the appropriate provider and configure it together with the API key.
+For BYOK models in Cline, choose the appropriate provider and configure it together with the API key.
 
 **Where is Cline's config stored?**
 Under `%USERPROFILE%\.cline\data\` (see _Where Cline stores things_ above) — but use the in-editor settings
