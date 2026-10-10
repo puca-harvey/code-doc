@@ -1,7 +1,6 @@
 # Embedded / PlatformIO workflow
 
-Guideline for firmware work in this repo: PlatformIO projects, building, flashing and debugging, plus which
-model to use for which job.
+Guideline for firmware work in this repo: PlatformIO projects, building, flashing and debugging, plus which model to use for which job.
 
 > PlatformIO **Core 6.2.0** is installed under `%USERPROFILE%\.platformio\`, and the VS Code extension is
 > `platformio.platformio-ide` 3.3.4. Platforms already fetched: `atmelavr`, `espressif32`.
@@ -22,8 +21,7 @@ model to use for which job.
 
 There are two ways to drive PlatformIO, and both work out of the box — pick whichever suits the moment.
 
-**From the IDE — no setup at all.** The PlatformIO task bar at the bottom of VS Code (→ build, ✓ upload, 🔌 monitor)
-and the *PlatformIO: …* entries in the Command Palette drive the same Core install the extension manages itself.
+**From the IDE — no setup at all.** The PlatformIO task bar at the bottom of VS Code (→ build, ✓ upload, 🔌 monitor) and the *PlatformIO: …* entries in the Command Palette drive the same Core install the extension manages itself.
 This is the path to use for normal work.
 
 **From a terminal — one line per shell.** `pio` lives at a fixed, known location:
@@ -32,9 +30,7 @@ This is the path to use for normal work.
 %USERPROFILE%\.platformio\penv\Scripts\pio.exe
 ```
 
-Core is installed as a self-contained Python virtual environment, so that folder is not on `PATH` and `Get-Command
-pio` will not find it. Nothing is missing — call it by full path, or add the folder for the current shell and use
-the short name from then on:
+Core is installed as a self-contained Python virtual environment, so that folder is not on `PATH` and `Get-Command pio` will not find it. Nothing is missing — call it by full path, or add the folder for the current shell and use the short name from then on:
 
 ```powershell
 # call it by full path
@@ -47,8 +43,7 @@ $env:Path += ";$env:USERPROFILE\.platformio\penv\Scripts"
 pio --version    # PlatformIO Core, version 6.2.0
 ```
 
-The `$env:Path +=` form lasts until the shell closes. Add the same folder under *Environment Variables → Path* to
-make it permanent across new terminals.
+The `$env:Path +=` form lasts until the shell closes. Add the same folder under *Environment Variables → Path* to make it permanent across new terminals.
 
 > The first build in a fresh project downloads the platform toolchain (100s of MB). `atmelavr` and `espressif32`
 > are already fetched; any other platform costs that one-time download.
@@ -67,8 +62,7 @@ my-project/
 └─ .pio/               # build output — never commit this
 ```
 
-`src/` is mandatory. PlatformIO compiles only what it finds there plus `lib/`; code outside is ignored
-unless declared under `build_src_filter`.
+`src/` is mandatory. PlatformIO compiles only what it finds there plus `lib/`; code outside is ignored unless declared under `build_src_filter`.
 
 ## platformio.ini
 
@@ -145,8 +139,7 @@ From the IDE, use the PlatformIO **task bar** at the bottom (→ / ✓ / 🔌) o
 | Hard fault | `monitor_filters = esp32_exception_decoder` prints the register dump and decoded backtrace |
 | Brownout | ESP32 brownout detector usually means a 5 V pin fed 3.3 V, or an undersupplied rail |
 
-For the simplest cases, `Serial.printf` + the monitor beats a debugger. Reach for JTAG when you need to
-inspect a struct or watch a variable change across an ISR.
+For the simplest cases, `Serial.printf` + the monitor beats a debugger. Reach for JTAG when you need to inspect a struct or watch a variable change across an ISR.
 
 ## Library dependencies
 

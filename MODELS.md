@@ -1,14 +1,8 @@
 ### ClinePass
 
-Flat **$9.99/month**, giving **2–5× the usage** of standard API rates on a curated set of open coding
+Flat **$9.99/month**, giving **2–5× the usage** of standard API rates on a curated set of open coding models. It exists because standard rate limits throttle exactly the workloads Cline performs — many turns of file reads, command runs and edits.
 
-models. It exists because standard rate limits throttle exactly the workloads Cline performs — many turns
-
-of file reads, command runs and edits.
-
-It is a **separate provider** from Cline (usage-billing); you can hold both. It is the flat-payment option for
-
-**heavy** usage — for light use, free + pay-per-use is usually cheaper (see _Which model for which task_ below).
+It is a **separate provider** from Cline (usage-billing); you can hold both. It is the flat-payment option for **heavy** usage — for light use, free + pay-per-use is usually cheaper (see _Which model for which task_ below).
 
 | Model ID                                | Input / Output per 1M                         | Best for                                           |
 | --------------------------------------- | --------------------------------------------- | -------------------------------------------------- |
@@ -25,30 +19,22 @@ It is a **separate provider** from Cline (usage-billing); you can hold both. It 
 | `cline-pass/qwen3.7-plus`               | $0.40 / $1.60 up to 256 K, then $1.20 / $4.80 | **Large context** — the pick for big refactors     |
 Those are _reference_ prices showing how usage is measured against your quota; you are not billed per token.
 
-Three limits apply: a **5-hour rolling window**, **weekly**, and **monthly**. Check the dashboard at
-
-[app.cline.bot](https://app.cline.bot/dashboard/subscription?personal=true).
-
-> **Deprecated and gone:** GLM-5.2, Kimi K2.6, Kimi K2.7 Code, DeepSeek V4 Flash. Your local Cline bundle
-
-> still references `cline-pass/glm-5.2` and `cline-pass/mimo-v2.6-flash` / `-pro`, so it is newer than some
-
-> docs — trust the picker over both.
+Three limits apply: a **5-hour rolling window**, **weekly**, and **monthly**. Check the dashboard at [app.cline.bot](https://app.cline.bot/dashboard/subscription?personal=true).
 
 **Recommended split across the whole setup:**
 
 | Situation | Best layer | Why |
 | --- | --- | --- |
 | Inline autocomplete (Tab) | Local qwen2.5-coder:14b (free) | The only local FIM model; the only role that needs a native FIM template |
-| Everyday chat, planning, edits, explanations | Local ornith-1.5:35b (free) | Free, unlimited, private; on the card and 65K. Good quality per cent |
-| Everyday chat when local is slow or cold | nemotron-3-super:cloud via Ollama | Same quality band as local 35 B, much faster to respond; runs under free credits for me |
-| Long input (whole codebases, big specs) | glm-5.3-flash:cloud via Ollama | 1M context at near-chat cost; 35B alone hits its size limit there |
+| Everyday chat, planning, edits, explanations | Local ornith-1.5:35b (free) | Local, free, unlimited, private - but heavy |
+| Everyday chat when local is slow or cold | nemotron-3-super:cloud via Ollama | Same quality band as local 35 B, much faster to respond; can be used with free credits |
+| Long input (whole codebases, big specs) | glm-5.3-flash:cloud via Ollama | 1M context at near-chat cost |
 | Hard reasoning, deep debugging | DeepSeek V4 Pro | Best price/performance for pure reasoning; reach for it when local 35B shows its size |
 | Visual/theme/UX work (screenshot in) | Ollama multimodal cloud (glm-5.3-flash:cloud, gemma4:cloud) | Natively multimodal; 35B sees no images |
 | Private code that must not leave the machine | Local Ollama only | Nothing leaves the box |
 | Heavy, quota-burning usage | ClinePass | See below — the flat tier for sustained, high-turn workloads |
-**The priority order (quality over speed, cost into account).** Start every task on the **free local** models.
 
+## Model selection
 There is nothing to decide and nothing to spend, so use free as long as it is good enough. Graduate only when a job genuinely outgrows 35 B:
 
 1. **Local, free first.** ornith-1.5:35b (chat / edit / apply) and qwen2.5-coder:14b (autocomplete) cover the bulk of any work — including most documentation, maker and web tasks — at zero cost. Switching mid-task is free on this side, so there is no reason to burn quota on what 35 B handles.
@@ -59,9 +45,9 @@ There is nothing to decide and nothing to spend, so use free as long as it is go
 
 > **Speed vs. quality, the real question.** `ornith-1.5:35b` is the quality reference locally, but it is slow and cold-start-sensitive — if it is not already loaded, Cline can time out and fall back to the last model used, and even `ollama run ornith-1.5:35b` to prewarm it takes a while. So the question is which free-eligible cloud model matches its quality at a fraction of the wait. For me, **`nemotron-3-super:cloud` (12B active / 120B MoE, ~256K context)** is the answer: strong on SWE-Bench and LiveCodeBench, and it delivers at least the quality of local 35 B while being noticeably faster.
 
-> Free usage is a fixed pool: a starter amount of usage (about $1 US$) credited each month, not a number of free requests — so you don't save anything by spending it on an expensive model; each request draws from the same pool regardless of the model's price. The one reason to reach for the heavy models is when you genuinely need their capability, not to be economical. Spend the cheap general-purpose options (`glm-5.3-flash:cloud`, `gpt-oss:20b-cloud`, `gemma4:cloud`) and `nemotron-3-nano:30b-cloud` freely, and reserve `nemotron-3-ultra:cloud` (output $3.00/1M) for the tasks that actually need that much.
+> Free usage is a fixed pool: a starter amount of usage (about 1 US$) credited each month, not a number of free requests. The one reason to reach for the heavy models is when you genuinely need their capability, not to be economical. Spend the cheap general-purpose options (`glm-5.3-flash:cloud`, `gpt-oss:20b-cloud`, `gemma4:cloud`) and `nemotron-3-nano:30b-cloud` freely, and reserve `nemotron-3-ultra:cloud` (output $3.00/1M) for the tasks that actually need that much.
 
-3. **DeepSeek for hard reasoning.** When a problem needs stronger reasoning than 35 B offers and you want the best price/performance — DeepSeek V4 Pro (and its cheaper off-peak Flash tier). Note: off-peak hours vary between BYOK providers like DeepSeek/Mistral and Ollama cloud models; check each provider's documentation for exact timing.
+3. **DeepSeek for hard reasoning.** When a problem needs stronger reasoning than 35 B offers and you want the best price/performance — DeepSeek V4 Pro (and its cheaper Flash version). Note: off-peak hours vary between BYOK providers like DeepSeek/Mistral and Ollama cloud models; check each provider's documentation for exact timing.
 
 4. **ClinePass only for heavy usage.** It is a flat 9.99 US$/month, gives 2–5× the usage of standard rates, and its limits (5-hour rolling window, weekly, monthly) only bite under sustained high volume. For light use, free + pay-per-use is almost always cheaper; hold it as the tier you activate when you are doing long, quota-heavy runs and the quota window, not the pay-per-token, is what you care about.
 
@@ -70,9 +56,10 @@ There is nothing to decide and nothing to spend, so use free as long as it is go
 | Task | Default | When to graduate |
 | --- | --- | --- |
 | **1. Technical documentation** (specs, datasheets, this kind of work) | Local ornith-1.5:35b — free, good style match for prose; slow or cold-start → nemotron-3-super:cloud, same quality band but much faster | A datasheet or spec too large for 65 K -> glm-5.3-flash:cloud (1 M); exact citations that must be verifiable -> DeepSeek V4 Pro |
-| **2. Maker — Arduino / ESP32 + peripherals** | Local ornith-1.5:35b + qwen2.5-coder:14b (firmware FIM); when 35 B is slow to warm → nemotron-3-super:cloud for the same quality at a fraction of the wait | A register- or timing-level bug that needs deeper reasoning -> DeepSeek V4 Pro, or glm-5.3-flash:cloud reading a datasheet. Local 35 B can lose coherence across very large diffs even at 65 K — that is the one case that warrants offloading |
+| **2. Maker — Arduino / ESP32 + peripherals** | Local ornith-1.5:35b + qwen2.5-coder:14b (firmware FIM); when 35B is slow to warm → nemotron-3-super:cloud for the same quality at a fraction of the wait | A register- or timing-level bug that needs deeper reasoning -> DeepSeek V4 Pro, or glm-5.3-flash:cloud reading a datasheet. Local 35B can lose coherence across very large diffs even at 65 K — that is the one case that warrants offloading |
 | **3. WordPress site** (theme/plugin, e.g. a sports club) | Local ornith-1.5:35b — free, multi-file PHP/CSS/HTML; local slow or cold → nemotron-3-super:cloud for same-quality output at faster speed | A larger feature -> glm-5.3-flash:cloud (1 M to hold the site + its structure); the visual/theme side -> a multimodal cloud model (screenshot in); heavy WooCommerce logic -> DeepSeek V4 Pro, or cline-pass/kimi-k3 if you want max quality and have quota |
-Note on BYOK models — when to use Mistral vs. DeepSeek-V4-Pro. DeepSeek-V4-Pro is the stronger choice for agentic coding: editing files, running commands, debugging and long sessions — agentic work is code- and reasoning-heavy, which is DeepSeek-V4-Pro's strength. Mistral Large 4's genuine edge is multilingual capability: reach for it specifically when you need docs or collaboration in another language (1 M context). DeepSeek-V4-Pro and Mistral Large 4 are priced ~the same (off-peak DeepSeek ~$0.66/$1.98, mistral ~$0.68/$2.09), so pick on the task, not the price.
+
+Note on BYOK models — when to use Mistral vs. DeepSeek-V4-Pro. DeepSeek-V4-Pro is the stronger choice for agentic coding: editing files, running commands, debugging and long sessions — agentic work is code- and reasoning-heavy, which is DeepSeek-V4-Pro's strength. Mistral Large 4's genuine edge is multilingual capability: reach for it specifically when you need docs or collaboration in another language (1 M context). Off-peak DeepSeek-V4-Pro and Mistral Large 4 are priced ~the same (off-peak DeepSeek ~$0.66/$1.98, mistral ~$0.68/$2.09), so pick on the task, not the price.
 
 ClinePass models are also usable outside Cline via the [Cline API](https://docs.cline.bot/api/overview)
 

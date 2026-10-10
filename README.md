@@ -23,9 +23,6 @@ VS Code with AI support but **without GitHub Copilot**:
 - **Autocomplete** — [Continue](https://continue.dev) driven by a **local Ollama** server running a
   Fill-in-the-Middle code model (tab completion).
 - **Chat and file editing** — [Cline](https://cline.bot), pointed at the same local models.
-- No GitHub account, no Copilot license, no code ever leaves the machine.
-
-Everything runs locally, so there is no per-request cost and no data sent to a cloud provider.
 
 ## Contents
 
@@ -48,7 +45,7 @@ VRAM decides which profile applies; see the hardware‑specific files for model 
 
 - Windows 10/11 (instructions below; macOS/Linux work the same for Ollama + Continue).
 - VS Code.
-- [Ollama](https://ollama.com/download) installed (verified here with `ollama 0.35.1`).
+- [Ollama](https://ollama.com/download) installed.
 - Enough VRAM to keep the autocomplete model resident — see the profiles above.
 
 ## Install
@@ -178,8 +175,6 @@ Continue commands with no default binding: `continue.newSession`, `continue.view
 Cline is the agent-style half of this setup: you describe a change, it plans, asks permission to run commands, and
 applies multi-file edits with checkpoints. Continue handles autocomplete; Cline handles everything conversational.
 
-Installed here as `saoudrizwan.claude-dev` (Cline `4.1.22`).
-
 ### Install
 
 1. VS Code → Extensions view (activity-bar icon, or `Ctrl`+`Shift`+`P` → _Extensions: View Extensions_) →
@@ -273,7 +268,6 @@ Ollama Cloud provides a free tier with starter usage credits. Once those credits
 
 ```powershell
 ollama run gemma4:cloud
-ollama run glm-5.3-flash:cloud
 ollama run gpt-oss:20b-cloud
 ollama run gpt-oss:120b-cloud
 ollama run nemotron-3-nano:30b-cloud
@@ -286,7 +280,7 @@ After running, the model will be available for selection in Cline (Provider: `Ol
 | Model ID | Context Window | Best For | Cost (per 1M tokens) — Free credits used first, then real money | How to Call |
 | --- | --- | --- | --- | --- |
 | `gemma4:cloud` (or `gemma3:cloud`) | 128K | General-purpose chat, multimodal (text + images), summarization, reasoning. Good default for everyday coding questions. | Input: $0.14<br>Cached: $0.05<br>Output: $0.40 | `ollama run gemma4:cloud` |
-| `glm-5.3-flash:cloud` | 1M | Cheap, fast — planning, chat, small edits; 18B active MoE, natively multimodal. The off-card fallback for the local `ornith-1.5:35b` when you'd rather not load another model. | Input: $0.15<br>Cached: $0.03<br>Output: $0.50 | `ollama run glm-5.3-flash:cloud` |
+| `glm-5.3-flash:cloud` | 1M | Cheap, fast — planning, chat, small edits; 18B active MoE, natively multimodal. The off-card fallback for the local `ornith-1.5:35b` when you'd rather not load another model. <br>Not eligible for use with free usage credits.| Input: $0.15<br>Cached: $0.03<br>Output: $0.50 | `ollama run glm-5.3-flash:cloud` |
 | `gpt-oss:20b-cloud` | 128K | Agentic tasks, function calling, web browsing, python tool calls, structured outputs. Lower latency, good for specialized/local use-cases. Configurable reasoning effort (low/medium/high). | Input: $0.07<br>Cached: $0.035<br>Output: $0.30 | `ollama run gpt-oss:20b-cloud` |
 | `gpt-oss:120b-cloud` | 128K | Complex reasoning, agentic workflows, higher quality outputs. Full chain-of-thought access for debugging. Apache 2.0 license. | Input: $0.15<br>Cached: $0.014<br>Output: $0.60 | `ollama run gpt-oss:120b-cloud` |
 | `nemotron-3-nano:30b-cloud` | 1M | Efficient agentic tasks, long-context reasoning + non-reasoning unified model. Hybrid MoE (3.5B active / 30B total). Good for coding agents, IT automation. | Input: $0.06<br>Output: $0.24 | `ollama run nemotron-3-nano:30b-cloud` |
@@ -300,14 +294,14 @@ After running, the model will be available for selection in Cline (Provider: `Ol
 > - **Off-peak pricing** (outside 12:00–18:00 UTC weekdays, all day weekends) applies to some models.
 > - Running models locally via Ollama is always unlimited and free.
 
-#### Cline Free
-
-Check the [Cline Free models documentation](https://docs.cline.bot/getting-started/free-models) for current available free tiers. Note that these offerings change frequently.
-
 **Configuration in Cline:**
 
 - **Provider:** `Ollama`
 - **Model ID:** `gemma4:cloud` (or any of the cloud models above)
+
+#### Cline Free
+
+Check the [Cline Free models documentation](https://docs.cline.bot/getting-started/free-models) for current available free tiers. Note that these offerings change frequently.
 
 Rotating, limited-time promotions on select models, at no cost up to a quota, may still be available in Cline. Any account can use them.
 
@@ -380,7 +374,7 @@ Yes, but tab completion will be slow — expect seconds instead of milliseconds.
 the note in [`12GB.md`](12GB.md).
 
 **Why not use one model for everything?**
-Autocomplete requires a model with a native FIM (Fill-in-the-Middle) template, so the locally installed `qwen2.5-coder:14b` is dedicated to that role via Continue. For everything else—chat, planning, `edit`, and `apply`—I use either `gemma4:cloud` via Ollama or BYOK (Bring Your Own Key) cloud models like DeepSeek.
+Autocomplete requires a model with a native FIM (Fill-in-the-Middle) template, so the locally installed `qwen2.5-coder:14b` is dedicated to that role via Continue. For everything else—chat, planning, `edit`, and `apply`.
 
 **How do I add a model?**
 Depends whether it is a local or a cloud model.
