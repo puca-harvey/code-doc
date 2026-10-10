@@ -57,17 +57,13 @@ There is nothing to decide and nothing to spend, so use free as long as it is go
 
 > **Free credits.** Ollama's Free plan gives you a starter amount of usage for a limited set of "starter" models; buying usage credits unlocks every model. Which models are free-eligible for your account isn't public — it depends on your account; when a cloud model isn't free-eligible, Ollama bills you. A practical rule of thumb: confirm the model runs under free credits once, then reuse it freely.
 
->
-
-> **Speed vs. quality, the real question.** `ornith-1.5:35b` is the quality reference locally, but it is slow and cold-start-sensitive — if it is not already loaded, Cline can time out and fall back to the last model used, and even `ollama run ornith-1.5:35b` to prewarm it takes a while. So the question is which free-eligible cloud model matches its quality at a fraction of the wait. For me, **`nemotron-3-super:cloud` (12B active / 120B MoE, ~256K context)** is the answer: strong on SWE-Bench and LiveCodeBench, and it delivers at least the quality of local 35 B while being noticeably faster. I have been running it a lot recently and am still below ~15% of my free credits — a good everyday fast fallback when local 35 B is slow to warm or just needs a longer context.
-
->
+> **Speed vs. quality, the real question.** `ornith-1.5:35b` is the quality reference locally, but it is slow and cold-start-sensitive — if it is not already loaded, Cline can time out and fall back to the last model used, and even `ollama run ornith-1.5:35b` to prewarm it takes a while. So the question is which free-eligible cloud model matches its quality at a fraction of the wait. For me, **`nemotron-3-super:cloud` (12B active / 120B MoE, ~256K context)** is the answer: strong on SWE-Bench and LiveCodeBench, and it delivers at least the quality of local 35 B while being noticeably faster.
 
 > Don't waste free credits on the pricey ones. Off the cheaper general-purpose options (`glm-5.3-flash:cloud`, `gpt-oss:20b-cloud`, `gemma4:cloud`) and `nemotron-3-nano:30b-cloud`, reach for the heavier models (`nemotron-3-ultra:cloud`, output $3.00/1M) only when you actually need that much capability.
 
 3. **DeepSeek for hard reasoning.** When a problem needs stronger reasoning than 35 B offers and you want the best price/performance — DeepSeek V4 Pro (and its cheaper off-peak Flash tier). Note: off-peak hours vary between BYOK providers like DeepSeek/Mistral and Ollama cloud models; check each provider's documentation for exact timing.
 
-4. **ClinePass only for heavy usage.** It is a flat .99/month, gives 2–5× the usage of standard rates, and its limits (5-hour rolling window, weekly, monthly) only bite under sustained high volume. For light use, free + pay-per-use is almost always cheaper; hold it as the tier you activate when you are doing long, quota-heavy runs and the quota window, not the pay-per-token, is what you care about.
+4. **ClinePass only for heavy usage.** It is a flat 9.99 US$/month, gives 2–5× the usage of standard rates, and its limits (5-hour rolling window, weekly, monthly) only bite under sustained high volume. For light use, free + pay-per-use is almost always cheaper; hold it as the tier you activate when you are doing long, quota-heavy runs and the quota window, not the pay-per-token, is what you care about.
 
 **Per-task guidance (the three you work with).**
 
