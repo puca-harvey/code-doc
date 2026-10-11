@@ -1,0 +1,16 @@
+# Line-ending policy: LF in the repository and in every checkout.
+# `text=auto` lets Git detect text files and `eol=lf` keeps them LF on
+# every platform, so a Windows editor cannot silently reintroduce CRLF.
+* text=auto eol=lf
+
+# Binary files - never apply end-of-line conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.exe binary
+*.dll binary
