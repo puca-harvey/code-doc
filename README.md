@@ -54,7 +54,7 @@ VRAM decides which profile applies; see the hardware‑specific files for model 
 - Install Ollama from https://ollama.com/download.
 - Pull models for your GPU VRAM (see 12GB.md or 8GB.md).
 - Verify with `ollama list`.
-- Install the **Ollama VS Code extension** (`Ollama.ollama`) — Extensions view → search **Ollama** → Install. It adds a native Ollama panel in the activity bar and, importantly, makes the **Ollama** API provider available inside Cline's settings so you can point it at `ornith-1.5:35b`.
+- Install the **Ollama VS Code extension** (`Ollama.ollama`) — Extensions view → search **Ollama** → Install. It adds a native Ollama panel in the activity bar and, importantly, makes the **Ollama** API provider available inside Cline's settings so you can point to it and chose from the Ollama model list.
 
 ### 2. Continue extension in VS Code
 
@@ -92,7 +92,7 @@ Type a few lines in a `.py`/`.ts` file and press `Tab` — Continue should compl
 2. Open Cline — click the Cline icon in the activity bar, or `Ctrl`+`Shift`+`P` → _Cline: Open in New Tab_.
 3. Click the **settings gear** (bottom of the Cline sidebar) → **API Provider** → **Ollama**.
 4. **Base URL** defaults to `http://localhost:11434` — leave it unless you changed Ollama's port.
-5. **Model Id** → type the exact tag from `ollama list`, e.g. `ornith-1.5:35b` (fast chat) or the code model from
+5. **Model Id** → type the exact tag from `ollama list`, e.g. `ornith-1.5:9b` (fast chat) or the code model from
    your [hardware profile](12GB.md). Cline can also fetch the list from `http://localhost:11434/api/tags`.
 6. Enable **Use Compact Prompt** (Settings → Features) — smaller context, much faster replies on a local model.
 7. Click **Done**.
@@ -112,7 +112,7 @@ Qwen2.5-Coder models with one:
 ```
 
 That `{{- if .Suffix }}` branch is the whole point. Continue sends _prefix + suffix_ and gets back only the middle,
-so the model completes the line you are on. A model without FIM — the chat model, `ornith-1.5:35b` — has a bare
+so the model completes the line you are on. A model without FIM — the chat model, `ornith-1.5:9b` — has a bare
 `{{ .Prompt }}` template with no `.Suffix`, so Continue falls back to pasting a raw `<|fim_prefix|>…<|fim_middle|>` prompt
 and the model continues _past_ the insertion point into unrelated prose. Fine for chat, useless for tab completion.
 
@@ -185,7 +185,7 @@ applies multi-file edits with checkpoints. Continue handles autocomplete; Cline 
 2. Open Cline — click the Cline icon in the activity bar, or `Ctrl`+`Shift`+`P` → _Cline: Open in New Tab_.
 3. Click the **settings gear** (bottom of the Cline sidebar) → **API Provider** → **Ollama**.
 4. **Base URL** defaults to `http://localhost:11434` — leave it unless you changed Ollama's port.
-5. **Model Id** → type the exact tag from `ollama list`, e.g. `ornith-1.5:35b` (fast chat) or the code model from
+5. **Model Id** → type the exact tag from `ollama list`, e.g. `ornith-1.5:9b` (fast chat) or the code model from
    your [hardware profile](12GB.md). Cline can also fetch the list from `http://localhost:11434/api/tags`.
 6. Enable **Use Compact Prompt** (Settings → Features) — smaller context, much faster replies on a local model.
 7. Click **Done**.
@@ -206,7 +206,7 @@ curl.exe http://localhost:11434/api/tags
 - Cline asks before running terminal commands; auto‑approve per‑command or per‑tool as you get comfortable.
 - `Ctrl`+`'` adds the current selection to the chat, or jumps to the chat input when nothing is selected.
 
-Point Cline at `ornith-1.5:35b` for everything conversational, including edits. It holds the `chat`, `edit` and
+Point Cline at `ollama/ornith-1.5:9b` for everything conversational, including edits. It holds the `chat`, `edit` and
 `apply` roles in `config.yaml` — the local chat model of record. For planning, a large `glm-5.3-flash:cloud` via Ollama
 is a good off-card option when you'd rather not load another local model; see *Ollama Cloud Models* below.
 `qwen2.5-coder:14b` keeps only `autocomplete`, where its native FIM template is the only thing that matters.
@@ -280,7 +280,7 @@ After running, the model will be available for selection in Cline (Provider: `Ol
 | Model ID | Context Window | Best For | Cost (per 1M tokens) — Free credits used first, then real money | How to Call |
 | --- | --- | --- | --- | --- |
 | `gemma4:cloud` (or `gemma3:cloud`) | 128K | General-purpose chat, multimodal (text + images), summarization, reasoning. Good default for everyday coding questions. | Input: $0.14<br>Cached: $0.05<br>Output: $0.40 | `ollama run gemma4:cloud` |
-| `glm-5.3-flash:cloud` | 1M | Cheap, fast — planning, chat, small edits; 18B active MoE, natively multimodal. The off-card fallback for the local `ornith-1.5:35b` when you'd rather not load another model. <br>Not eligible for use with free usage credits.| Input: $0.15<br>Cached: $0.03<br>Output: $0.50 | `ollama run glm-5.3-flash:cloud` |
+| `glm-5.3-flash:cloud` | 1M | Cheap, fast — planning, chat, small edits; 18B active MoE, natively multimodal. The off-card fallback for the local `ornith-1.5:9b` when you'd rather not load another model. <br>Not eligible for use with free usage credits.| Input: $0.15<br>Cached: $0.03<br>Output: $0.50 | `ollama run glm-5.3-flash:cloud` |
 | `gpt-oss:20b-cloud` | 128K | Agentic tasks, function calling, web browsing, python tool calls, structured outputs. Lower latency, good for specialized/local use-cases. Configurable reasoning effort (low/medium/high). | Input: $0.07<br>Cached: $0.035<br>Output: $0.30 | `ollama run gpt-oss:20b-cloud` |
 | `gpt-oss:120b-cloud` | 128K | Complex reasoning, agentic workflows, higher quality outputs. Full chain-of-thought access for debugging. Apache 2.0 license. | Input: $0.15<br>Cached: $0.014<br>Output: $0.60 | `ollama run gpt-oss:120b-cloud` |
 | `nemotron-3-nano:30b-cloud` | 1M | Efficient agentic tasks, long-context reasoning + non-reasoning unified model. Hybrid MoE (3.5B active / 30B total). Good for coding agents, IT automation. | Input: $0.06<br>Output: $0.24 | `ollama run nemotron-3-nano:30b-cloud` |

@@ -30,14 +30,15 @@ models:
       - autocomplete # tab completion; needs native FIM
 
   # ---------------------------------------------------------
-  # CHAT / EDIT / APPLY MODEL: Ornith 1.5 35B
-  # (qwen35 architecture, ~35.5B total / ~3B active MoE, Q4_K_M,
+  # CHAT / EDIT / APPLY MODEL: Ornith 1.5 9B
+  # (qwen35 architecture, ~9.5B total / ~1.5B active MoE, Q4_K_M,
   # 262k context, tool use, thinking and vision).
-  # Handles the conversational and code-transform roles. It replaced
-  # prior 9B Ornith 1.5 (superseded, no longer pulled locally). MoE:
-  # only ~3B params are active at any moment, so that active footprint
-  # fits comfortably in the 12 GB RTX 5070 VRAM; it is the ~22 GB total
-  # (all expert weights on disk) that never all fits resident.
+  # Handles the conversational and code-transform roles. It is a
+  # smaller variant that fits comfortably in memory without swapping.
+  # MoE:
+  # only ~1.5B params are active at any moment, so that active footprint
+  # fits easily in the 12 GB RTX 5070 VRAM and system RAM.
+  #
   # It cannot serve autocomplete: its Ollama Modelfile template is a
   # bare "{{ .Prompt }}" with no .Suffix, so Continue would fall back
   # to sending a raw "<|fim_prefix|>...<|fim_middle|>" prompt, which
@@ -47,15 +48,15 @@ models:
   # its edits feel stronger. That is a preference call - neither
   # model is measurably better at edits from here.
   # contextLength 65536 (matches the OLLAMA_CONTEXT_LENGTH=65536 env
-  # default): it does not cap the 3B active weights (resident), but
-  # it does size the KV cache, so 65536 tokens costs ~0.4 GB - small
+  # default): it does not cap the 1.5B active weights (resident), but
+  # it does size the KV cache, so 65536 tokens costs ~0.2 GB - small
   # and resident, and lets long chats/threads/diffs land in one
   # request without offloading. The 14B autocomplete STAYS at 8192 so
   # it never thrashes during tab completion.
   # ---------------------------------------------------------
-  - name: Ornith 1.5 35B
+  - name: Ornith 1.5 9B
     provider: ollama
-    model: ornith-1.5:35b
+    model: ornith-1.5:9b
     contextLength: 65536
     roles:
       - chat
