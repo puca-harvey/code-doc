@@ -18,9 +18,10 @@ models:
   # completion instead of the raw-prompt fallback. It is the only model
   # here that can do this, which is why autocomplete stays on the 14B
   # even though it is the slower of the two.
-  # contextLength 8192 keeps the ~10 GB model fully resident on the
-  # 12 GB RTX 5070; the machine-wide OLLAMA_CONTEXT_LENGTH=65536 would
-  # otherwise be requested and push the model into CPU offload.
+  # contextLength 8192 keeps the ~9 GB model fully resident on the
+  # 12 GB RTX 5070. Clear any machine-wide OLLAMA_CONTEXT_LENGTH (see
+  # 12GB.md), because Ollama would otherwise request that value instead
+  # and can push the model into CPU offload.
   # ---------------------------------------------------------
   - name: Qwen2.5-Coder 14B
     provider: ollama
@@ -47,12 +48,12 @@ models:
   # still win despite the speed; move those two roles back to it if
   # its edits feel stronger. That is a preference call - neither
   # model is measurably better at edits from here.
-  # contextLength 65536 (matches the OLLAMA_CONTEXT_LENGTH=65536 env
-  # default): it does not cap the 1.5B active weights (resident), but
-  # it does size the KV cache, so 65536 tokens costs ~0.2 GB - small
-  # and resident, and lets long chats/threads/diffs land in one
-  # request without offloading. The 14B autocomplete STAYS at 8192 so
-  # it never thrashes during tab completion.
+  # contextLength 65536: it does not cap the 1.5B active weights
+  # (resident), but it does size the KV cache, and the resulting cache
+  # stays within the 12 GB card's headroom, letting long
+  # chats/threads/diffs land in one request without offloading. The
+  # 14B autocomplete STAYS at 8192 so it never thrashes during tab
+  # completion.
   # ---------------------------------------------------------
   - name: Ornith 1.5 9B
     provider: ollama

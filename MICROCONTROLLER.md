@@ -55,7 +55,7 @@ PlatformIO expects this structure — do not relocate `src/`:
 ```text
 my-project/
 ├─ platformio.ini      # the only file you hand-write
-├─ src/                # firmware sources (.c/.cpp/.ino/.py)
+├─ src/                # firmware sources (.c/.cpp/.ino/.S)
 ├─ lib/                # private libraries, one folder each
 ├─ include/            # project-wide headers
 ├─ test/               # unit tests (Unity + AUnit)
@@ -75,7 +75,8 @@ platform = espressif32
 board = esp32dev
 framework = arduino
 monitor_speed = 115200
-monitor_filters = esp32_exception_decoder, time      ; readable ESP32 stack traces
+; esp32_exception_decoder prints readable ESP32 stack traces
+monitor_filters = esp32_exception_decoder, time
 upload_speed = 921600
 lib_deps =
     bblanchon/ArduinoJson@^7.0.4
@@ -93,7 +94,8 @@ framework = arduino
 monitor_speed = 9600
 upload_speed = 115200
 
-[env:nodemcuv2]        ; ESP8266 — needs its own platform, not installed yet
+; ESP8266 — needs its own platform (espressif8266), not installed yet
+[env:nodemcuv2]
 platform = espressif8266
 board = nodemcuv2
 framework = arduino
@@ -135,7 +137,7 @@ From the IDE, use the PlatformIO **task bar** at the bottom (→ / ✓ / 🔌) o
 | Situation | Approach |
 | --- | --- |
 | ESP32 | JTAG via `debug_tool = esp-prog` / `esp-bridge`; set `build_type = debug` for `-Og -g3` |
-| AVR / Uno | Atmel-ICE or AVR Dragon over ISP; `-Og` only, AVR has 1 KB usable RAM for variables |
+| AVR / Uno | Atmel-ICE or AVR Dragon over ISP; `-Og` only, AVR has only 2 KB of SRAM (~1.5 KB usable for variables) |
 | Hard fault | `monitor_filters = esp32_exception_decoder` prints the register dump and decoded backtrace |
 | Brownout | ESP32 brownout detector usually means a 5 V pin fed 3.3 V, or an undersupplied rail |
 
@@ -158,15 +160,15 @@ invent API calls.** Everything must compile against the real library on disk.
 
 | Task | Model | Why |
 | --- | --- | --- |
-| Plan a task split, choose libraries | `ornith-1.5:35b` (local) | Fast; planning is prose, not code |
-| Write a driver or fix a compile error | `ornith-1.5:35b` (local) | Holds `edit`/`apply`; ~3 B active MoE fits the card, 65 536 context |
-| Explain a register or a crash dump | `ornith-1.5:35b` (local) | Explanation, not generation |
+| Plan a task split, choose libraries | `ornith-1.5:9b` (local) | Fast; planning is prose, not code |
+| Write a driver or fix a compile error | `ornith-1.5:9b` (local) | Holds `edit`/`apply`; ~1.5 B active MoE fits the card, 65 536 context |
+| Explain a register or a crash dump | `ornith-1.5:9b` (local) | Explanation, not generation |
 | Inline edit of one line while typing | `qwen2.5-coder:14b` (local) | The only FIM model; `Tab` completion |
-| Long multi-file refactor | ClinePass — `cline-pass/glm-5.3` | 35 B can lose coherence across a big diff even at 65 K |
+| Long multi-file refactor | ClinePass — `cline-pass/glm-5.3` | The local 9 B can lose coherence across a big diff even at 65 K |
 | Large-context reading (datasheets, header trees) | ClinePass — `cline-pass/qwen3.7-plus` | >256 K context tier; local 65 K is too small |
-| When the quota is gone | `cline-free/*` | See [`README.md`](README.md) for the full model table |
+| When the quota is gone | `cline-free/*` | See [`MODELS.md`](MODELS.md) for the full model table |
 
-Practical split: **local for day-to-day edits, ClinePass when a task outgrows 8 K of context or spans many
+Practical split: **local for day-to-day edits, ClinePass when a task outgrows 65 K of context or spans many
 files.** Local models are free and private, which matters when you paste proprietary driver code.
 
 ## Rules files: teaching the models your board
@@ -181,7 +183,7 @@ This is the highest-leverage thing you can add — it fixes the "hallucinated AP
 
 ## Board
 - Target: ESP32 Dev Module (esp32dev), framework: Arduino, PlatformIO Core 6.2.0.
-- Second env: Arduino Uno (atmelaVR) — keep sources portable to AVR: no
+- Second env: Arduino Uno (atmelavr) — keep sources portable to AVR: no
   dynamic allocation, no `String` in hot paths, `Serial` not `SerialUSB`.
 
 ## Always verify before writing
@@ -218,5 +220,6 @@ Add `.pio/`, `.vscode/cpptools/`, and `.cache/` to `.gitignore` — never commit
 ## See also
 
 - [`README.md`](README.md) — the VS Code + Ollama + Continue + Cline setup, keybindings, and the model tables.
+- [`MODELS.md`](MODELS.md) — model selection: ClinePass, local vs. cloud vs. BYOK, and per-task defaults.
 - [`continue/config.yaml`](continue/config.yaml) — model roles and context lengths.
 

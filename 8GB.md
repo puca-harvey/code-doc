@@ -20,7 +20,7 @@ Everything else follows from that: drop to the 7 B model for autocomplete and le
 | `ornith-1.5:9b` | 6.6 GB | Yes, but not alongside the 7 B | Chat; tightest fit on this card |
 | `nomic-embed-text-v2-moe:latest` | 957 MB | Yes | Embeddings |
 
-7.62B parameters, Q4_K_M quantization, Apache 2.0.
+`qwen2.5-coder:7b`: 7.62B parameters, Q4_K_M quantization, Apache 2.0.
 
 ## Model set
 
@@ -31,7 +31,7 @@ ollama pull nomic-embed-text-v2-moe:latest # ~1 GB - embeddings
 ollama list                                # verify
 ```
 
-Budget **~12 GB of disk**. `ornith-1.5:9b` is the one to drop first if space is tight — Cline falls back to the 7 B for chat without any other change.
+Budget **~12 GB of disk**. `ornith-1.5:9b` is the one to drop first if space is tight; Cline's chat model is set in Cline itself, so point it at `qwen2.5-coder:7b` there if you do.
 
 `ornith-1.5:9b` at 6.6 GB is the largest model on this card that still fits, and 8 GB of VRAM is the limit that matters: the weights alone leave roughly 1.4 GB for the KV cache. Give the chat model a small `contextLength` for that
 reason — see *Context length* below.
@@ -54,7 +54,7 @@ Ollama keeps one model loaded at a time by default and swaps as needed. A 4.7 GB
       - autocomplete
 ```
 
-The `ornith-1.5:9b` entry carries `contextLength: 8192` from the 12 GB config. Lower it to `4096` here too — at 6.6 GB that model is the marginal fit on this card, and the KV cache is what tips it into offload.
+The `ornith-1.5:9b` entry carries `contextLength: 65536` from the 12 GB config. Lower it to `4096` here too — at 6.6 GB that model is the marginal fit on this card, and the KV cache is what tips it into offload.
 
 Do not leave `contextLength` unset on this card. Ollama would then request a large default context on top of the weights, and the KV cache is what tips a marginal fit into offload. That matters more than usual here: `ornith-1.5:9b`
 declares a 262144 native context, so an unset length can ask for a window no 8 GB card could ever hold.

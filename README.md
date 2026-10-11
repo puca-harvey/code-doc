@@ -5,14 +5,14 @@
 - [Contents](#contents)
 - [Requirements](#requirements)
 - [Install](#install)
-  - [1. Ollama + models](#1-ollama-models)
+  - [1. Ollama + models](#1-ollama--models)
   - [2. Continue extension in VS Code](#2-continue-extension-in-vs-code)
   - [3. Verify](#3-verify)
   - [4. Cline extension in VS Code](#4-cline-extension-in-vs-code)
 - [Autocomplete](#autocomplete)
-- [Cline (chat / file editing)](#cline-chat-file-editing)
+- [Cline (chat / file editing)](#cline-chat--file-editing)
 - [Cloud Models and BYOK](#cloud-models-and-byok)
-- [Embeddings / codebase awareness](#embeddings-codebase-awareness)
+- [Embeddings / codebase awareness](#embeddings--codebase-awareness)
 - [Refreshing the config schema after a Continue upgrade](#refreshing-the-config-schema-after-a-continue-upgrade)
 - [Troubleshooting](#troubleshooting)
 - [Daily workflow](#daily-workflow)
@@ -29,8 +29,9 @@ VS Code with AI support but **without GitHub Copilot**:
 | File                                           | What it is                                                                                                         |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | [`continue/config.yaml`](continue/config.yaml) | The Continue `config.yaml` (models, roles, context lengths). Copy to `%USERPROFILE%\.continue\config.yaml`.        |
-| [`12GB.md`](12GB.md)                           | Hardware profile for a 12 GB card (RTX 5070) — model set, context length, measured speeds.                         |
+| [`12GB.md`](12GB.md)                           | Hardware profile for a 12 GB card (RTX 5070) — model set, context length and model roles.                          |
 | [`8GB.md`](8GB.md)                             | Hardware profile for an 8 GB card (RTX 4060) — smaller model set and a reduced context length.                     |
+| [`MODELS.md`](MODELS.md)                       | Model selection guide: ClinePass pricing, the local/cloud/BYOK split, per-task defaults.                           |
 | [`MICROCONTROLLER.md`](MICROCONTROLLER.md)     | PlatformIO / embedded workflow: `platformio.ini`, build & flash, debugging, rules files, model split for firmware. |
 | [`LICENSE`](LICENSE)                           | Repository license.                                                                                                |
 
@@ -54,7 +55,7 @@ VRAM decides which profile applies; see the hardware‑specific files for model 
 - Install Ollama from https://ollama.com/download.
 - Pull models for your GPU VRAM (see 12GB.md or 8GB.md).
 - Verify with `ollama list`.
-- Install the **Ollama VS Code extension** (`Ollama.ollama`) — Extensions view → search **Ollama** → Install. It adds a native Ollama panel in the activity bar and, importantly, makes the **Ollama** API provider available inside Cline's settings so you can point to it and chose from the Ollama model list.
+- Install the **Ollama VS Code extension** (`Ollama.ollama`) — Extensions view → search **Ollama** → Install. It adds a native Ollama panel in the activity bar and, importantly, makes the **Ollama** API provider available inside Cline's settings so you can point to it and choose from the Ollama model list.
 
 ### 2. Continue extension in VS Code
 
@@ -268,6 +269,7 @@ Ollama Cloud provides a free tier with starter usage credits. Once those credits
 
 ```powershell
 ollama run gemma4:cloud
+ollama run glm-5.3-flash:cloud
 ollama run gpt-oss:20b-cloud
 ollama run gpt-oss:120b-cloud
 ollama run nemotron-3-nano:30b-cloud
@@ -280,7 +282,7 @@ After running, the model will be available for selection in Cline (Provider: `Ol
 | Model ID | Context Window | Best For | Cost (per 1M tokens) — Free credits used first, then real money | How to Call |
 | --- | --- | --- | --- | --- |
 | `gemma4:cloud` (or `gemma3:cloud`) | 128K | General-purpose chat, multimodal (text + images), summarization, reasoning. Good default for everyday coding questions. | Input: $0.14<br>Cached: $0.05<br>Output: $0.40 | `ollama run gemma4:cloud` |
-| `glm-5.3-flash:cloud` | 1M | Cheap, fast — planning, chat, small edits; 18B active MoE, natively multimodal. The off-card fallback for the local `ornith-1.5:9b` when you'd rather not load another model. <br>Not eligible for use with free usage credits.| Input: $0.15<br>Cached: $0.03<br>Output: $0.50 | `ollama run glm-5.3-flash:cloud` |
+| `glm-5.3-flash:cloud` | 1M | Cheap, fast — planning, chat, small edits; 18B active MoE, natively multimodal. The off-card fallback for the local `ornith-1.5:9b` when you'd rather not load another model. <br>Not eligible for use with free usage credits. | Input: $0.15<br>Cached: $0.03<br>Output: $0.50 | `ollama run glm-5.3-flash:cloud` |
 | `gpt-oss:20b-cloud` | 128K | Agentic tasks, function calling, web browsing, python tool calls, structured outputs. Lower latency, good for specialized/local use-cases. Configurable reasoning effort (low/medium/high). | Input: $0.07<br>Cached: $0.035<br>Output: $0.30 | `ollama run gpt-oss:20b-cloud` |
 | `gpt-oss:120b-cloud` | 128K | Complex reasoning, agentic workflows, higher quality outputs. Full chain-of-thought access for debugging. Apache 2.0 license. | Input: $0.15<br>Cached: $0.014<br>Output: $0.60 | `ollama run gpt-oss:120b-cloud` |
 | `nemotron-3-nano:30b-cloud` | 1M | Efficient agentic tasks, long-context reasoning + non-reasoning unified model. Hybrid MoE (3.5B active / 30B total). Good for coding agents, IT automation. | Input: $0.06<br>Output: $0.24 | `ollama run nemotron-3-nano:30b-cloud` |
@@ -374,7 +376,7 @@ Yes, but tab completion will be slow — expect seconds instead of milliseconds.
 the note in [`12GB.md`](12GB.md).
 
 **Why not use one model for everything?**
-Autocomplete requires a model with a native FIM (Fill-in-the-Middle) template, so the locally installed `qwen2.5-coder:14b` is dedicated to that role via Continue. For everything else—chat, planning, `edit`, and `apply`.
+Autocomplete requires a model with a native FIM (Fill-in-the-Middle) template, so the locally installed Qwen2.5-Coder tag (`qwen2.5-coder:14b`, or `:7b` on an 8 GB card) is dedicated to that role via Continue. For everything else—chat, planning, `edit`, and `apply`.
 
 **How do I add a model?**
 Depends whether it is a local or a cloud model.
