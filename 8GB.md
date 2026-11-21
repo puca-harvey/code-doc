@@ -7,17 +7,19 @@ The general setup — installing Ollama, Continue and Cline, and the keybindings
 
 ## The one change that matters
 
-**`qwen2.5-coder:14b` does not fit.** It is 9.0 GB on disk, which already exceeds the whole card before any KV
+**`deepseek-coder-v2:16b` does not fit.** It is 8.9 GB on disk, which already exceeds the whole card before any KV
 cache is allocated. Ollama will either refuse to load it or split it across system RAM, and in the second case tab
 completion crawls.
 
-Everything else follows from that: drop to the 7 B model for autocomplete and let it keep the FIM template.
+Everything else follows from that: drop to the 7 B model for autocomplete and let it keep the FIM template. There is
+no DeepSeek-Coder-V2 tag small enough for 8 GB — the 16 B is the smallest — so autocomplete stays on
+`qwen2.5-coder:7b`.
 
 | Model | Size on disk | Fits in 8 GB? | Notes |
 | --- | --- | --- | --- |
-| `qwen2.5-coder:14b` | 9.0 GB | **No** | Exceeds the card on its own |
+| `deepseek-coder-v2:16b` | 8.9 GB | **No** | Exceeds the card on its own |
 | `qwen2.5-coder:7b` | 4.7 GB | Yes | The `autocomplete` model here |
-| `ornith-1.5:9b` | 6.6 GB | Yes, but not alongside the 7 B | Chat; tightest fit on this card |
+| `mimo-v2.6:9b` | 6.6 GB | Yes, but not alongside the 7 B | Chat; tightest fit on this card |
 | `nomic-embed-text-v2-moe:latest` | 957 MB | Yes | Embeddings |
 
 `qwen2.5-coder:7b`: 7.62B parameters, Q4_K_M quantization, Apache 2.0.
@@ -26,14 +28,14 @@ Everything else follows from that: drop to the 7 B model for autocomplete and le
 
 ```powershell
 ollama pull qwen2.5-coder:7b               # ~4.7 GB - autocomplete
-ollama pull ornith-1.5:9b                  # ~6.6 GB - chat
+ollama pull mimo-v2.6:9b                   # ~6.6 GB - chat
 ollama pull nomic-embed-text-v2-moe:latest # ~1 GB - embeddings
 ollama list                                # verify
 ```
 
-Budget **~12 GB of disk**. `ornith-1.5:9b` is the one to drop first if space is tight; Cline's chat model is set in Cline itself, so point it at `qwen2.5-coder:7b` there if you do.
+Budget **~12 GB of disk**. `mimo-v2.6:9b` is the one to drop first if space is tight; Cline's chat model is set in Cline itself, so point it at `qwen2.5-coder:7b` there if you do.
 
-`ornith-1.5:9b` at 6.6 GB is the largest model on this card that still fits, and 8 GB of VRAM is the limit that matters: the weights alone leave roughly 1.4 GB for the KV cache. Give the chat model a small `contextLength` for that
+`mimo-v2.6:9b` at 6.6 GB is the largest model on this card that still fits, and 8 GB of VRAM is the limit that matters: the weights alone leave roughly 1.4 GB for the KV cache. Give the chat model a small `contextLength` for that
 reason — see *Context length* below.
 
 Ollama keeps one model loaded at a time by default and swaps as needed. A 4.7 GB autocomplete model plus a 6.6 GB chat model does not fit in 8 GB simultaneously, so expect the first token of a chat reply to pause while the chat model loads. That pause is normal on this card and is not a misconfiguration.
@@ -54,20 +56,20 @@ Ollama keeps one model loaded at a time by default and swaps as needed. A 4.7 GB
       - autocomplete
 ```
 
-The `ornith-1.5:9b` entry carries `contextLength: 65536` from the 12 GB config. Lower it to `4096` here too — at 6.6 GB that model is the marginal fit on this card, and the KV cache is what tips it into offload.
+The `mimo-v2.6:9b` entry carries `contextLength: 65536` from the 12 GB config. Lower it to `4096` here too — at 6.6 GB that model is the marginal fit on this card, and the KV cache is what tips it into offload.
 
-Do not leave `contextLength` unset on this card. Ollama would then request a large default context on top of the weights, and the KV cache is what tips a marginal fit into offload. That matters more than usual here: `ornith-1.5:9b`
-declares a 262144 native context, so an unset length can ask for a window no 8 GB card could ever hold.
+Do not leave `contextLength` unset on this card. Ollama would then request a large default context on top of the weights, and the KV cache is what tips a marginal fit into offload. That matters more than usual here: `mimo-v2.6:9b`
+declares a 262144 (256K) native context, so an unset length can ask for a window no 8 GB card could ever hold.
 
 ### The 7 B model keeps FIM
 
-This matters, because the 7 B tag is a genuine fill-in-the-middle model, not a cut-down derivative. Ollama ships `qwen2.5-coder:7b` with the same native template as the 14 B:
+This matters, because the 7 B tag is a genuine fill-in-the-middle model, not a cut-down derivative. Ollama ships `qwen2.5-coder:7b` with a native FIM template of its own:
 
 ```text
 {{- if .Suffix }}<|fim_prefix|>{{ .Prompt }}<|fim_suffix|>{{ .Suffix }}<|fim_middle|>
 ```
 
-So `autocomplete` keeps working exactly as it does on the larger card — you get real *prefix + suffix* in, and only the middle out, instead of a raw-prompt fallback that runs past the insertion point into prose. Autocomplete quality is lower than the 14 B, but the failure mode of a non-FIM model is avoided entirely.
+So `autocomplete` keeps working exactly as it does on the larger card — you get real *prefix + suffix* in, and only the middle out, instead of a raw-prompt fallback that runs past the insertion point into prose. Autocomplete quality is lower than the 16 B, but the failure mode of a non-FIM model is avoided entirely.
 
 ## Context length
 
@@ -90,13 +92,13 @@ ollama ps
 ```
 
 - **100% GPU** — good, tab completion will be fast.
-- **A CPU percentage beside the model** — too tight. Drop `contextLength` to `2048`, or unload the chat model with `ollama stop ornith-1.5:9b` and check again.
+- **A CPU percentage beside the model** — too tight. Drop `contextLength` to `2048`, or unload the chat model with `ollama stop mimo-v2.6:9b` and check again.
 
 `ollama ps` lists only *loaded* models, so an empty result just means nothing has been requested yet. Type a few lines in a `.py`/`.ts` file and press `Tab`.
 
 ## Cline
 
-Point Cline at `ornith-1.5:9b` for planning, explanation and edits. The 14 B is the better code model, but it will not load here — see the top of this page — and it does nothing but autocomplete anyway.
+Point Cline at `mimo-v2.6:9b` for planning, explanation and edits. `deepseek-coder-v2:16b` is the better code model, but it will not load here — see the top of this page — and it does nothing but autocomplete anyway.
 
 Keep **Use Compact Prompt** enabled. On a card this size, context growth is the first thing to push a request into offload.
 
@@ -104,12 +106,12 @@ Keep **Use Compact Prompt** enabled. On a card this size, context growth is the 
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| Ollama "not enough memory" on startup | The 14 B model is configured | Switch `autocomplete` to `qwen2.5-coder:7b` |
+| Ollama "not enough memory" on startup | The 16 B model is configured | Switch `autocomplete` to `qwen2.5-coder:7b` |
 | Completions feel sluggish | CPU offload | `ollama ps` shows a CPU split — lower `contextLength` to `2048` |
 | Chat is slow to start | Model swap, not a fault | 4.7 GB + 6.6 GB cannot stay resident together; this is expected |
 | Completion continues into prose | A non-FIM model holds `autocomplete` | Keep `autocomplete` on `qwen2.5-coder:7b`, not the chat model |
 
 ## Related
 
-- [`12GB.md`](12GB.md) — the same setup with a card that fits the 14 B model.
+- [`12GB.md`](12GB.md) — the same setup with a card that fits the larger models.
 - [`README.md`](README.md) — the general, hardware-independent setup.

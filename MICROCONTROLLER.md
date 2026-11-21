@@ -160,10 +160,10 @@ invent API calls.** Everything must compile against the real library on disk.
 
 | Task | Model | Why |
 | --- | --- | --- |
-| Plan a task split, choose libraries | `ornith-1.5:9b` (local) | Fast; planning is prose, not code |
-| Write a driver or fix a compile error | `ornith-1.5:9b` (local) | Holds `edit`/`apply`; ~1.5 B active MoE fits the card, 65 536 context |
-| Explain a register or a crash dump | `ornith-1.5:9b` (local) | Explanation, not generation |
-| Inline edit of one line while typing | `qwen2.5-coder:14b` (local) | The only FIM model; `Tab` completion |
+| Plan a task split, choose libraries | `mimo-v2.6:9b` (local) | Fast; planning is prose, not code |
+| Write a driver or fix a compile error | `mimo-v2.6:9b` (local) | Holds `edit`/`apply`; 7.7 GB at 65 536 context, 100% GPU |
+| Explain a register or a crash dump | `mimo-v2.6:9b` (local) | Explanation, not generation |
+| Inline edit of one line while typing | `deepseek-coder-v2:16b` (local) | The only FIM model; `Tab` completion |
 | Long multi-file refactor | ClinePass — `cline-pass/glm-5.3` | The local 9 B can lose coherence across a big diff even at 65 K |
 | Large-context reading (datasheets, header trees) | ClinePass — `cline-pass/qwen3.7-plus` | >256 K context tier; local 65 K is too small |
 | When the quota is gone | `cline-free/*` | See [`MODELS.md`](MODELS.md) for the full model table |

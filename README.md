@@ -93,7 +93,7 @@ Type a few lines in a `.py`/`.ts` file and press `Tab` — Continue should compl
 2. Open Cline — click the Cline icon in the activity bar, or `Ctrl`+`Shift`+`P` → _Cline: Open in New Tab_.
 3. Click the **settings gear** (bottom of the Cline sidebar) → **API Provider** → **Ollama**.
 4. **Base URL** defaults to `http://localhost:11434` — leave it unless you changed Ollama's port.
-5. **Model Id** → type the exact tag from `ollama list`, e.g. `ornith-1.5:9b` (fast chat) or the code model from
+5. **Model Id** → type the exact tag from `ollama list`, e.g. `mimo-v2.6:9b` (fast chat) or the code model from
    your [hardware profile](12GB.md). Cline can also fetch the list from `http://localhost:11434/api/tags`.
 6. Enable **Use Compact Prompt** (Settings → Features) — smaller context, much faster replies on a local model.
 7. Click **Done**.
@@ -105,19 +105,20 @@ curl.exe http://localhost:11434/api/tags
 ```
 ## Autocomplete
 
-Continue's `autocomplete` role needs a model with a native fill-in-the-middle (FIM) template. Ollama ships the
-Qwen2.5-Coder models with one:
+Continue's `autocomplete` role needs a model with a native fill-in-the-middle (FIM) template. Ollama ships
+DeepSeek-Coder-V2 with one:
 
 ```text
-{{- if .Suffix }}<|fim_prefix|>{{ .Prompt }}<|fim_suffix|>{{ .Suffix }}<|fim_middle|>
+{{- if .Suffix }}<｜fim▁begin｜>{{ .Prompt }}<｜fim▁hole｜>{{ .Suffix }}<｜fim▁end｜>
 ```
 
 That `{{- if .Suffix }}` branch is the whole point. Continue sends _prefix + suffix_ and gets back only the middle,
-so the model completes the line you are on. A model without FIM — the chat model, `ornith-1.5:9b` — has a bare
+so the model completes the line you are on. A model without FIM — the chat model, `mimo-v2.6:9b` — has a bare
 `{{ .Prompt }}` template with no `.Suffix`, so Continue falls back to pasting a raw `<|fim_prefix|>…<|fim_middle|>` prompt
 and the model continues _past_ the insertion point into unrelated prose. Fine for chat, useless for tab completion.
 
-Both `qwen2.5-coder:14b` and `qwen2.5-coder:7b` carry this template. Which one to use depends on your VRAM; see
+`deepseek-coder-v2:16b` carries this template, and so does `qwen2.5-coder:7b` — the fallback autocomplete model on an
+8 GB card, where the 16 B does not fit. Which one to use depends on your VRAM; see
 [`12GB.md`](12GB.md) or [`8GB.md`](8GB.md).
 
 ### Keybindings
@@ -186,7 +187,7 @@ applies multi-file edits with checkpoints. Continue handles autocomplete; Cline 
 2. Open Cline — click the Cline icon in the activity bar, or `Ctrl`+`Shift`+`P` → _Cline: Open in New Tab_.
 3. Click the **settings gear** (bottom of the Cline sidebar) → **API Provider** → **Ollama**.
 4. **Base URL** defaults to `http://localhost:11434` — leave it unless you changed Ollama's port.
-5. **Model Id** → type the exact tag from `ollama list`, e.g. `ornith-1.5:9b` (fast chat) or the code model from
+5. **Model Id** → type the exact tag from `ollama list`, e.g. `mimo-v2.6:9b` (fast chat) or the code model from
    your [hardware profile](12GB.md). Cline can also fetch the list from `http://localhost:11434/api/tags`.
 6. Enable **Use Compact Prompt** (Settings → Features) — smaller context, much faster replies on a local model.
 7. Click **Done**.
@@ -207,10 +208,10 @@ curl.exe http://localhost:11434/api/tags
 - Cline asks before running terminal commands; auto‑approve per‑command or per‑tool as you get comfortable.
 - `Ctrl`+`'` adds the current selection to the chat, or jumps to the chat input when nothing is selected.
 
-Point Cline at `ollama/ornith-1.5:9b` for everything conversational, including edits. It holds the `chat`, `edit` and
+Point Cline at `ollama/mimo-v2.6:9b` for everything conversational, including edits. It holds the `chat`, `edit` and
 `apply` roles in `config.yaml` — the local chat model of record. For planning, a large `glm-5.3-flash:cloud` via Ollama
 is a good off-card option when you'd rather not load another local model; see *Ollama Cloud Models* below.
-`qwen2.5-coder:14b` keeps only `autocomplete`, where its native FIM template is the only thing that matters.
+`deepseek-coder-v2:16b` keeps only `autocomplete`, where its native FIM template is the only thing that matters.
 
 ### Where Cline stores things
 
@@ -282,7 +283,7 @@ After running, the model will be available for selection in Cline (Provider: `Ol
 | Model ID | Context Window | Best For | Cost (per 1M tokens) — Free credits used first, then real money | How to Call |
 | --- | --- | --- | --- | --- |
 | `gemma4:cloud` (or `gemma3:cloud`) | 128K | General-purpose chat, multimodal (text + images), summarization, reasoning. Good default for everyday coding questions. | Input: $0.14<br>Cached: $0.05<br>Output: $0.40 | `ollama run gemma4:cloud` |
-| `glm-5.3-flash:cloud` | 1M | Cheap, fast — planning, chat, small edits; 18B active MoE, natively multimodal. The off-card fallback for the local `ornith-1.5:9b` when you'd rather not load another model. <br>Not eligible for use with free usage credits. | Input: $0.15<br>Cached: $0.03<br>Output: $0.50 | `ollama run glm-5.3-flash:cloud` |
+| `glm-5.3-flash:cloud` | 1M | Cheap, fast — planning, chat, small edits; 18B active MoE, natively multimodal. The off-card fallback for the local `mimo-v2.6:9b` when you'd rather not load another model. <br>Not eligible for use with free usage credits. | Input: $0.15<br>Cached: $0.03<br>Output: $0.50 | `ollama run glm-5.3-flash:cloud` |
 | `gpt-oss:20b-cloud` | 128K | Agentic tasks, function calling, web browsing, python tool calls, structured outputs. Lower latency, good for specialized/local use-cases. Configurable reasoning effort (low/medium/high). | Input: $0.07<br>Cached: $0.035<br>Output: $0.30 | `ollama run gpt-oss:20b-cloud` |
 | `gpt-oss:120b-cloud` | 128K | Complex reasoning, agentic workflows, higher quality outputs. Full chain-of-thought access for debugging. Apache 2.0 license. | Input: $0.15<br>Cached: $0.014<br>Output: $0.60 | `ollama run gpt-oss:120b-cloud` |
 | `nemotron-3-nano:30b-cloud` | 1M | Efficient agentic tasks, long-context reasoning + non-reasoning unified model. Hybrid MoE (3.5B active / 30B total). Good for coding agents, IT automation. | Input: $0.06<br>Output: $0.24 | `ollama run nemotron-3-nano:30b-cloud` |
@@ -353,7 +354,7 @@ Hardware-specific symptoms (CPU offload, out-of-memory) are in the profile for y
 | Symptom                         | Likely cause                                          | Fix                                                                                  |
 | ------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | No completions on `Tab`         | Continue not installed/enabled, or Ollama unreachable | `ollama list` must show the model; reload the window; check the Continue output view |
-| Completion continues into prose | A non-FIM model holds the `autocomplete` role         | Only a Qwen2.5-Coder tag supports FIM; keep `autocomplete` off the chat model        |
+| Completion continues into prose | A non-FIM model holds the `autocomplete` role         | Only DeepSeek-Coder-V2 (or `qwen2.5-coder:7b` on 8 GB) supports FIM here; keep `autocomplete` off the chat model        |
 | Cline cannot reach Ollama       | Wrong Base URL                                        | Use `http://localhost:11434`, then `ollama serve`                                    |
 | Chat replies are generic        | Fast chat model selected for a code question          | Switch Cline to the code model from your hardware profile                            |
 | Semantic search returns nothing | Embed role points at the built-in embedder            | Select _Nomic Embed v2 MoE_, then rebuild the index                                  |
@@ -376,7 +377,7 @@ Yes, but tab completion will be slow — expect seconds instead of milliseconds.
 the note in [`12GB.md`](12GB.md).
 
 **Why not use one model for everything?**
-Autocomplete requires a model with a native FIM (Fill-in-the-Middle) template, so the locally installed Qwen2.5-Coder tag (`qwen2.5-coder:14b`, or `:7b` on an 8 GB card) is dedicated to that role via Continue. For everything else—chat, planning, `edit`, and `apply`.
+Autocomplete requires a model with a native FIM (Fill-in-the-Middle) template, so the locally installed `deepseek-coder-v2:16b` (or `qwen2.5-coder:7b` on an 8 GB card, where the 16 B does not fit) is dedicated to that role via Continue. For everything else—chat, planning, `edit`, and `apply`.
 
 **How do I add a model?**
 Depends whether it is a local or a cloud model.

@@ -8,56 +8,68 @@ name: Main Config
 version: 1.0.0
 schema: v1
 
+# NOTE: there is no top-level `autocomplete:` key in the Continue 2.0 YAML
+# schema - it is rejected with "property autocomplete is not allowed". Tab
+# completion options belong on the model entry, as `autocompleteOptions:`
+# (see the autocomplete model below). Runtime precedence is:
+#   DEFAULT_AUTOCOMPLETE_OPTS < config.tabAutocompleteOptions < model.autocompleteOptions
+
 models:
   # ---------------------------------------------------------
-  # AUTOCOMPLETE MODEL: Qwen2.5‑Coder 14B
+  # AUTOCOMPLETE MODEL: DeepSeek-Coder-V2 16B
   # Used for tab completion only.
   # Ollama ships this model with a native fill-in-the-middle template
-  # ("{{- if .Suffix }}<|fim_prefix|>...") and reports the "insert"
+  # ("{{- if .Suffix }}<｜fim▁begin｜>...") and reports the "insert"
   # capability, so Continue uses the real FIM code path for tab
   # completion instead of the raw-prompt fallback. It is the only model
-  # here that can do this, which is why autocomplete stays on the 14B
-  # even though it is the slower of the two.
-  # contextLength 8192 keeps the ~9 GB model fully resident on the
-  # 12 GB RTX 5070. Clear any machine-wide OLLAMA_CONTEXT_LENGTH (see
-  # 12GB.md), because Ollama would otherwise request that value instead
-  # and can push the model into CPU offload.
+  # here with a FIM template, which is why autocomplete sits on it.
+  # deepseek-coder-v2:16b is DeepSeek-Coder-V2-Lite-Instruct: a MoE
+  # (deepseek2 architecture, 15.7B total / ~2.4B active, Q4_0, 8.9 GB
+  # on disk).
+  # contextLength 8192: measured on the 12 GB RTX 5070, the model loads
+  # at ~11 GB and keeps ~91% on the GPU (~9% spills to CPU) with other
+  # apps open, because its KV cache is much larger per token than
+  # Qwen2.5-Coder's. Close other GPU apps for 100% GPU, or drop this to
+  # 4096 (measured 10 GB, 100% GPU).
+  # Clear any machine-wide OLLAMA_CONTEXT_LENGTH too (see 12GB.md),
+  # because Ollama would otherwise request that value instead and push
+  # more of the model into CPU offload.
   # ---------------------------------------------------------
-  - name: Qwen2.5-Coder 14B
+  - name: DeepSeek-Coder-V2 16B
     provider: ollama
-    model: qwen2.5-coder:14b
+    model: deepseek-coder-v2:16b
     contextLength: 8192
+    autocompleteOptions:
+      # Continue's default budget is 1024 prompt tokens; raising it makes the
+      # larger window actually useful. Keep it well under contextLength.
+      maxPromptTokens: 2048
     roles:
       - autocomplete # tab completion; needs native FIM
 
   # ---------------------------------------------------------
-  # CHAT / EDIT / APPLY MODEL: Ornith 1.5 9B
-  # (qwen35 architecture, ~9.5B total / ~1.5B active MoE, Q4_K_M,
-  # 262k context, tool use, thinking and vision).
-  # Handles the conversational and code-transform roles. It is a
-  # smaller variant that fits comfortably in memory without swapping.
-  # MoE:
-  # only ~1.5B params are active at any moment, so that active footprint
-  # fits easily in the 12 GB RTX 5070 VRAM and system RAM.
+  # CHAT / EDIT / APPLY MODEL: MiMo 2.6 9B
+  # (MiMo-V2.6-Distill-Qwen-9B by Xiaomi MiMo; qwen35 architecture,
+  # 9.0B params, Q4_K_M, ~6.6 GB, 262144 native context, tool use,
+  # thinking and vision). Handles the conversational and code-transform
+  # roles.
   #
   # It cannot serve autocomplete: its Ollama Modelfile template is a
   # bare "{{ .Prompt }}" with no .Suffix, so Continue would fall back
   # to sending a raw "<|fim_prefix|>...<|fim_middle|>" prompt, which
   # the model continues past the insertion point into prose.
-  # edit/apply are code transforms where Qwen2.5-Coder's training may
-  # still win despite the speed; move those two roles back to it if
-  # its edits feel stronger. That is a preference call - neither
-  # model is measurably better at edits from here.
-  # contextLength 65536: it does not cap the 1.5B active weights
-  # (resident), but it does size the KV cache, and the resulting cache
-  # stays within the 12 GB card's headroom, letting long
+  # edit/apply are code transforms where DeepSeek-Coder's training may
+  # still win; move those two roles back to it if its edits feel
+  # stronger. That is a preference call - neither model is measurably
+  # better at edits from here.
+  # contextLength 65536: it does not cap the weights, but it does size
+  # the KV cache; measured 7.7 GB loaded and 100% GPU at 65536, so long
   # chats/threads/diffs land in one request without offloading. The
-  # 14B autocomplete STAYS at 8192 so it never thrashes during tab
+  # autocomplete model STAYS at 8192 so it never thrashes during tab
   # completion.
   # ---------------------------------------------------------
-  - name: Ornith 1.5 9B
+  - name: MiMo 2.6 9B
     provider: ollama
-    model: ornith-1.5:9b
+    model: mimo-v2.6:9b
     contextLength: 65536
     roles:
       - chat
